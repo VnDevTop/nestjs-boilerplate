@@ -10,5 +10,11 @@ export const databaseConfig = registerAs<TypeOrmModuleOptions>(
     url: process.env.DATABASE_URL,
     autoLoadEntities: true,
     synchronize: false,
+    ssl:
+      process.env.DB_SSL === 'true'
+        ? {
+            rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false',
+          }
+        : undefined,
   })
 );

@@ -20,6 +20,9 @@ const envSchema = z.object({
   API_PREFIX: z.string().optional(),
   API_VERSION: z.string().optional(),
   APP_URL: z.string().url().optional(),
+  DATABASE_URL: z.string().optional(),
+  DB_SSL: z.string().optional(),
+  DB_SSL_REJECT_UNAUTHORIZED: z.string().optional(),
   OBSERVE_APP_KEY: z.string().optional(),
   OBSERVE_APP_SECRET: z.string().optional(),
 });

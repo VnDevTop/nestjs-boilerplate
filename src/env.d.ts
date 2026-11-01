@@ -7,6 +7,9 @@ declare global {
       API_PREFIX?: string;
       API_VERSION?: string;
       APP_URL?: string;
+      DATABASE_URL?: string;
+      DB_SSL?: string;
+      DB_SSL_REJECT_UNAUTHORIZED?: string;
       OBSERVE_APP_KEY?: string;
       OBSERVE_APP_SECRET?: string;
     }
