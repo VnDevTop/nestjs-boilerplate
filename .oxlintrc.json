@@ -1,8 +1,11 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["jsdoc"],
   "rules": {
     "typescript/no-explicit-any": "off",
-    "typescript/no-floating-promises": "error"
+    "typescript/no-floating-promises": "error",
+    "jsdoc/check-tag-names": "warn",
+    "jsdoc/empty-tags": "warn"
   },
   "env": {
     "node": true
