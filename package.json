@@ -1,6 +1,6 @@
 {
   "name": "nestjs-boilerplate",
-  "version": "0.0.1",
+  "version": "12.4.0",
   "description": "Production-ready NestJS boilerplate with modular architecture, authentication, and modern tooling.",
   "author": "VnDevTop",
   "contributors": [],
