@@ -57,7 +57,7 @@
     "@commitlint/config-conventional": "^21.2.4",
     "@nestjs/cli": "^12.0.11",
     "@nestjs/mau": "^0.2.6",
-    "@nestjs/schematics": "^12.0.0",
+    "@nestjs/schematics": "^12.0.12",
     "@nestjs/testing": "^12.3.2",
     "@types/express": "^5.0.0",
     "@types/node": "^26.6.6",
