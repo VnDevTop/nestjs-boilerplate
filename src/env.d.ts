@@ -12,6 +12,7 @@ declare global {
       DB_SSL_REJECT_UNAUTHORIZED?: string;
       OBSERVE_APP_KEY?: string;
       OBSERVE_APP_SECRET?: string;
+      OBSERVE_SERVICE_ID?: string;
     }
   }
 }

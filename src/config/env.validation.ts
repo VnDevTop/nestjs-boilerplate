@@ -25,6 +25,7 @@ const envSchema = z.object({
   DB_SSL_REJECT_UNAUTHORIZED: z.string().optional(),
   OBSERVE_APP_KEY: z.string().optional(),
   OBSERVE_APP_SECRET: z.string().optional(),
+  OBSERVE_SERVICE_ID: z.string().optional(),
 });
 
 /**
