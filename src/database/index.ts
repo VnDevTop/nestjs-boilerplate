@@ -1,4 +1,3 @@
 // Barrel exports for database
 
-
-export {};
+export { BaseEntity } from './base.entity.js';

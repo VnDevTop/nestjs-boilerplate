@@ -14,6 +14,6 @@ export const observeConfig = registerAs<ObserveOptions>(
     ({
       appKey: process.env.OBSERVE_APP_KEY,
       appSecret: process.env.OBSERVE_APP_SECRET,
-      serviceId: 'nestjs-boilerplate',
+      serviceId: process.env.OBSERVE_SERVICE_ID as string,
     })
 );
