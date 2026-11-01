@@ -16,6 +16,10 @@ import { z } from 'zod';
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.coerce.number().int().positive().default(3000),
+  APP_NAME: z.string().optional(),
+  API_PREFIX: z.string().optional(),
+  API_VERSION: z.string().optional(),
+  APP_URL: z.string().url().optional(),
   OBSERVE_APP_KEY: z.string().optional(),
   OBSERVE_APP_SECRET: z.string().optional(),
 });
