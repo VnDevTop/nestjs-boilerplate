@@ -5,6 +5,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [12.6.0] - 2026-11-01
+
+### Added
+
+- Modular source layout and feature module folders.
+- Configuration module with Zod env validation and typed namespaces.
+- TypeORM + PostgreSQL configuration via `DATABASE_URL` (with SSL support).
+- Docker Compose with PostgreSQL and Redis.
+- Conditional Observe module registration.
+- Phase 6 summary documentation.
+
 ## [12.5.0] - 2026-11-01
 
 ### Added
