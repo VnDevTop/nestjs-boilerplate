@@ -6,10 +6,12 @@ import { AppService } from './app.service.js';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CacheModule } from '@nestjs/cache-manager';
 import { BullModule } from "@nestjs/bull";
+import { MailerModule } from '@nestjs-modules/mailer';
 import {
   appConfig,
   cacheConfig,
   databaseConfig,
+  mailConfig,
   observeConfig,
   queueConfig,
   swaggerConfig,
@@ -23,7 +25,7 @@ export const {ObserveModule, ObserveInstrument} = createObserveModule();
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [appConfig, observeConfig, databaseConfig, swaggerConfig, cacheConfig],
+      load: [appConfig, observeConfig, databaseConfig, swaggerConfig, cacheConfig, queueConfig, mailConfig],
       validate: validateEnv,
     }),
     // Distributed tracing, auto-correlated logs, request/job metrics, error
@@ -41,6 +43,14 @@ export const {ObserveModule, ObserveInstrument} = createObserveModule();
     CacheModule.registerAsync(cacheConfig.asProvider()),
     // Distributed job processing backed by Redis via BullMQ (no in-memory fallback)
     BullModule.forRootAsync(queueConfig.asProvider()),
+    // Outbound email service via SMTP (Nodemailer)
+    // Only register when mail credentials are provided
+    ConditionalModule.registerWhen(
+      MailerModule.forRootAsync(mailConfig.asProvider()),
+      (env) =>
+        !!env.MAIL_USERNAME &&
+        !!env.MAIL_PASSWORD,
+    ),
     // Health check endpoints: GET /health and GET /health/ready
     HealthModule,
   ],
