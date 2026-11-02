@@ -54,6 +54,26 @@ declare global {
        */
       CACHE_TTL?: number;
       /**
+       * Queue name for BullMQ.
+       * Optional: defaults to 'default' if not set.
+       */
+      QUEUE_NAME?: string;
+      /**
+       * Job processing timeout in milliseconds.
+       * Optional: defaults to 0 (no timeout) if not set.
+       */
+      QUEUE_TIMEOUT?: number;
+      /**
+       * Remove completed jobs from queue.
+       * Set to 'false' to keep completed jobs in queue (default: true).
+       */
+      QUEUE_REMOVE?: string;
+      /**
+       * Allow job retry on failure.
+       * Set to 0 for unlimited retries (default: 0).
+       */
+      QUEUE_ATTEMPTS?: number;
+      /**
        * Enable SSL for database connection.
        * Optional: string value to configure SSL settings.
        */
