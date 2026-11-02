@@ -19,7 +19,7 @@ export const mailConfig = registerAs<MailerOptions>(
     // Use nodemailer transport
     transport: {
       host: process.env.MAIL_HOST ?? 'smtp.google.com',
-      port: Number(process.env.MAIL_PORT ?? 587),
+      port: process.env.MAIL_PORT ? Number(process.env.MAIL_PORT) : 587,
       auth: {
         user: process.env.MAIL_USERNAME,
         pass: process.env.MAIL_PASSWORD,
