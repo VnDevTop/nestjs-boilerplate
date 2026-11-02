@@ -32,17 +32,57 @@ documentation foundations. Core packages will be added incrementally.
   - Two API doc endpoints: `GET /api/docs` (public) and `GET /api/docs/admin` (admin, enabled in non-production or via `SWAGGER_ENABLE_ADMIN` env).
   - Path, version, and enable/disable configurable via environment variables (`SWAGGER_PATH`, `SWAGGER_VERSION`, `SWAGGER_ENABLE_ADMIN`).
   - Convention: every DTO and entity property exposed in API must use `@ApiProperty`/`@ApiPropertyOptional` with `type`, `example`, and `description` (for SDK generation and API docs).
+- `feat(validation): add class-validator and class-transformer`
+  - Added global `ValidationPipe` using `class-validator` and `class-transformer`.
+  - Configuration: `whitelist: true`, `transform: true`, `forbidNonWhitelisted: true`.
+  - Pipe automatically validates DTOs on incoming requests, stripping non-whitelisted properties and transforming payloads.
+  - Every DTO property exposed in API must use `@ApiProperty`/`@ApiPropertyOptional` with `type`, `example`, and `description` (for SDK generation and API docs).
+- `feat(validation): add zod support`
+  - `zod` is used for environment validation via `src/config/env.validation.ts`.
+  - Zod schema validates required environment variables at startup with clear error messages.
+  - Schema includes: `NODE_ENV`, `PORT`, `APP_NAME`, `API_PREFIX`, `API_VERSION`, `APP_URL`, `DATABASE_URL`, `DB_SSL`, `DB_SSL_REJECT_UNAUTHORIZED`, `OBSERVE_APP_KEY`, `OBSERVE_APP_SECRET`, `OBSERVE_SERVICE_ID`, and Swagger config (`SWAGGER_*`).
+  - Validation uses `zod.safeParse()` for clear error messages at boot rather than confusing failures later.
+  - Schema also validates `REDIS_URL` (must be valid URL format) and `CACHE_TTL` (must be positive integer, default: 300).
 - `feat(config): refine typed configuration namespaces`
-  - Added `appConfig`, `observeConfig`, `databaseConfig` using `registerAs`.
-  - Declared `NodeJS.ProcessEnv` types in `src/env.d.ts`.
+  - Added `appConfig`, `observeConfig`, `databaseConfig`, and `cacheConfig` using `registerAs`.
+  - Declared `NodeJS.ProcessEnv` types in `src/env.d.ts` with JSDoc descriptions for all 21 environment variables.
+  - Config namespaces exportable via `src/config/index.ts` barrel export.
 - `feat(config): apply typed config sample and env declarations`
 - `feat(database): support ssl options`
 - `chore(docker): add compose with postgres and redis`
 - `feat(config): conditionally register observe module`
-
-## Validation
-
-```bash
+- `feat(health): add terminus health checks`
+  - Added `@nestjs/terminus` for health check endpoints.
+  - Endpoints: `GET /health` (general health) and `GET /health/ready` (readiness).
+  - Configurable via `TerminusModule.forRoot()` with options for timeout, ignore errors, and exploration.
+  - Health status exposed via Nest's built-in monitoring.
+- `feat(cache): add cache manager` (keyv + Redis, no memory fallback)
+  - Added `@nestjs/cache-manager`, `keyv`, and `@keyv/redis` dependencies.
+  - **Moved to configuration namespace**: cache configuration now uses `cacheConfig` from `src/config/cache.config.ts` via `registerAs`.
+  - Configured distributed cache backed by Redis via KeyV with no in-memory fallback.
+  - Redis connection configured via `REDIS_URL` environment variable.
+  - TTL configurable via `CACHE_TTL` environment variable (default: 300 seconds).
+  - Cache module exported for use with `@InjectCache()` decorator across the application.
+  - Registered in `AppModule` via `CacheModule.registerAsync(cacheConfig.asProvider())`.
+- `feat(queue): add bullmq queues`
+  - Installed `bullmq` dependency for distributed job processing.
+  - Configured `BullModule.forRootAsync()` with Redis connection using `queueConfig.asProvider()` (no in-memory fallback).
+  - Queue module exported for job registration via `@InjectQueue()` decorator.
+  - Queue configuration via `queueConfig` with `redis`, `redisHost`, `redisPort`, `redisPassword`, and `redisDb` options.
+  - Jobs and queues defined in `src/modules/queue/` directory.
+- `feat(mail): add mailer`
+  - Installed `@nestjs-modules/mailer` and `nodemailer` dependencies.
+  - Configured outbound email service via SMTP with Nodemailer transport.
+  - Email settings configurable via environment variables (`MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM`, `MAIL_SECURE`, `MAIL_PREVIEW`).
+  - Mailer module exported for use with `@Mailer()` decorator and `@SendMessage()` handler across the application.
+  - Mail configuration registered in `AppModule` via `MailerModule.forRootAsync(mailConfig.asProvider())`.
+- `feat(i18n): add internationalization`
+  - Installed `@nestjs/i18n` package for internationalization support.
+  - Configured i18n module with default language Vietnamese (`vi`) and English (`en`).
+  - Language settings configurable via environment variables (`I18N_DEFAULT_LANGUAGE`, `I18N_AVAILABLE_LANGUAGES`).
+  - i18n module registered in `AppModule` via `I18nModule.forRoot()` with language options.
+  - Supports language switching and locale middleware for i18n middleware.
+- `feat(config): use module option types directly`
 npm run lint
 npx tsc --noEmit
 npm run build
@@ -51,3 +91,4 @@ npm run test:e2e
 ```
 
 All commands pass on the `feat/project-structure` branch.
+```

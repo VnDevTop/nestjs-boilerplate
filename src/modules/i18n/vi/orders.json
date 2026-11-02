@@ -1,0 +1,20 @@
+{
+  "items": {
+    "one": "{count} mục",
+    "other": "{count} mục"
+  },
+  "confirmed": "Cảm ơn! Đơn hàng #{id} đã được xác nhận: {items}.",
+  "notFound": "Đơn hàng #{id} không tìm thấy.",
+  "invalidId": "Số đơn hàng phải là số nguyên.",
+  "unknownProduct": "Sản phẩm {id} không có trong nostro phân loại.",
+  "tooManyItems": {
+    "one": "{path} không được vượt quá {count} mục per sản phẩm",
+    "other": "{path} không được vượt quá {count} mục per sản phẩm"
+  },
+  "unsupportedCountry": "Chúng tôi chỉ ship đến United States, Poland và Germany.",
+  "status": {
+    "pending": "Chờ thanh toán",
+    "paid": "Đã thanh toán",
+    "shipped": "Đã ship"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "items": {
+    "one": "{count} article",
+    "other": "{count} articles"
+  },
+  "confirmed": "Merci! La commande #{id} est confirmée : {items}.",
+  "notFound": "Commande #{id} introuvable.",
+  "invalidId": "Le numéro de commande doit être un nombre entier.",
+  "unknownProduct": "Produit {id} n'est pas dans notre catalogue.",
+  "tooManyItems": {
+    "one": "{path} ne doit pas dépasser {count} article par produit",
+    "other": "{path} ne doit pas dépasser {count} articles par produit"
+  },
+  "unsupportedCountry": "Nous n'expédions qu'aux États-Unis, en Pologne et en Allemagne.",
+  "status": {
+    "pending": "En attente de paiement",
+    "paid": "Payé",
+    "shipped": "Expédié"
+  }
+}

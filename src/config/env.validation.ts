@@ -48,6 +48,10 @@ const envSchema = z.object({
   SWAGGER_PATH: z.string().optional(),
   SWAGGER_ADMIN_PATH: z.string().optional(),
   SWAGGER_ENABLE_ADMIN: z.string().optional(),
+  I18N_DEFAULT_LOCALE: z.string().optional(),
+  I18N_SUPPORTED_LOCALES: z.string().optional(),
+  I18N_QUERY_LOCALE: z.string().optional(),
+  I18N_HEADER_LOCALE: z.string().optional(),
 });
 
 /**

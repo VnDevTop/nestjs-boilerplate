@@ -1,0 +1,20 @@
+{
+  "items": {
+    "one": "{count} 项目",
+    "other": "{count} 个项目"
+  },
+  "confirmed": "谢谢! 订单#{id} 已确认: {items}.",
+  "notFound": "订单#{id} 未找到。",
+  "invalidId": "订单编号必须是整数。",
+  "unknownProduct": "产品 {id} 不在我们的目录中。",
+  "tooManyItems": {
+    "one": "{path} 每个产品不得超过 {count} 件",
+    "other": "{path} 每个产品不得超过 {count} 件"
+  },
+  "unsupportedCountry": "我们只发货到美国、波兰和德国。",
+  "status": {
+    "pending": "待付款",
+    "paid": "已付款",
+    "shipped": "已发货"
+  }
+}

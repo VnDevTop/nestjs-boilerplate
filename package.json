@@ -30,7 +30,9 @@
   "overrides": {
     "tmp": "^0.2.7",
     "undici": "^8.12.3",
-    "minimatch": "^11.0.3"
+    "minimatch": "^11.0.3",
+    "class-validator": "^0.15.1",
+    "class-transformer": "^0.5.1"
   },
   "type": "module",
   "scripts": {
@@ -57,6 +59,7 @@
     "@nestjs/common": "^12.3.2",
     "@nestjs/config": "^12.0.1",
     "@nestjs/core": "^12.3.2",
+    "@nestjs/i18n": "^0.0.2",
     "@nestjs/observe": "^0.3.21",
     "@nestjs/platform-express": "^12.3.2",
     "@nestjs/swagger": "^12.0.5",
