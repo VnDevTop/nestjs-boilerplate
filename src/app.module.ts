@@ -5,6 +5,7 @@ import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { appConfig, databaseConfig, observeConfig, swaggerConfig, validateEnv } from './config/index.js';
+import { HealthModule } from './modules/health/health.module.js';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
@@ -26,6 +27,8 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
         !!env.OBSERVE_SERVICE_ID,
     ),
     TypeOrmModule.forRootAsync(databaseConfig.asProvider()),
+    // Health check endpoints: GET /health and GET /health/ready
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
