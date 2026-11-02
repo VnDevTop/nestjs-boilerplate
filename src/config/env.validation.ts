@@ -26,6 +26,12 @@ const envSchema = z.object({
   OBSERVE_APP_KEY: z.string().optional(),
   OBSERVE_APP_SECRET: z.string().optional(),
   OBSERVE_SERVICE_ID: z.string().optional(),
+  SWAGGER_TITLE: z.string().optional(),
+  SWAGGER_DESCRIPTION: z.string().optional(),
+  SWAGGER_VERSION: z.string().optional(),
+  SWAGGER_PATH: z.string().optional(),
+  SWAGGER_ADMIN_PATH: z.string().optional(),
+  SWAGGER_ENABLE_ADMIN: z.string().optional(),
 });
 
 /**

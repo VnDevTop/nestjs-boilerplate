@@ -13,6 +13,12 @@ declare global {
       OBSERVE_APP_KEY?: string;
       OBSERVE_APP_SECRET?: string;
       OBSERVE_SERVICE_ID?: string;
+      SWAGGER_TITLE?: string;
+      SWAGGER_DESCRIPTION?: string;
+      SWAGGER_VERSION?: string;
+      SWAGGER_PATH?: string;
+      SWAGGER_ADMIN_PATH?: string;
+      SWAGGER_ENABLE_ADMIN?: string;
     }
   }
 }

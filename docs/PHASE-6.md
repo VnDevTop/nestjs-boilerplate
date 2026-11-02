@@ -26,6 +26,12 @@ documentation foundations. Core packages will be added incrementally.
 
 ### Phase 6.1 — Cross-cutting core packages (started)
 
+- `feat(swagger): add openapi documentation with setupSwagger`
+  - Added `@nestjs/swagger` and `src/core/swagger/` module.
+  - Created `setupSwagger()` function to manage Swagger configuration.
+  - Two API doc endpoints: `GET /api/docs` (public) and `GET /api/docs/admin` (admin, enabled in non-production or via `SWAGGER_ENABLE_ADMIN` env).
+  - Path, version, and enable/disable configurable via environment variables (`SWAGGER_PATH`, `SWAGGER_VERSION`, `SWAGGER_ENABLE_ADMIN`).
+  - Convention: every DTO and entity property exposed in API must use `@ApiProperty`/`@ApiPropertyOptional` with `type`, `example`, and `description` (for SDK generation and API docs).
 - `feat(config): refine typed configuration namespaces`
   - Added `appConfig`, `observeConfig`, `databaseConfig` using `registerAs`.
   - Declared `NodeJS.ProcessEnv` types in `src/env.d.ts`.

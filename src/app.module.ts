@@ -4,7 +4,7 @@ import { createObserveModule } from '@nestjs/observe';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { appConfig, databaseConfig, observeConfig, validateEnv } from './config/index.js';
+import { appConfig, databaseConfig, observeConfig, swaggerConfig, validateEnv } from './config/index.js';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
@@ -12,7 +12,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [appConfig, observeConfig, databaseConfig],
+      load: [appConfig, observeConfig, databaseConfig, swaggerConfig],
       validate: validateEnv,
     }),
     // Distributed tracing, auto-correlated logs, request/job metrics, error
