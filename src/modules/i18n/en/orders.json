@@ -1,0 +1,21 @@
+
+{
+  "items": {
+    "one": "{count} item",
+    "other": "{count} items"
+  },
+  "confirmed": "Thank you! Order #{id} is confirmed: {items}.",
+  "notFound": "Order #{id} was not found.",
+  "invalidId": "The order number must be a whole number.",
+  "unknownProduct": "Product {id} is not in our catalog.",
+  "tooManyItems": {
+    "one": "{path} must not exceed {count} item per product",
+    "other": "{path} must not exceed {count} items per product"
+  },
+  "unsupportedCountry": "We only ship to the United States, Poland and Germany.",
+  "status": {
+    "pending": "Awaiting payment",
+    "paid": "Paid",
+    "shipped": "Shipped"
+  }
+}

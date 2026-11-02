@@ -110,6 +110,16 @@ declare global {
        */
       MAIL_PREVIEW?: string;
       /**
+       * Default language code for i18n module.
+       * Optional: defaults to 'en' if not set.
+       */
+      I18N_DEFAULT_LOCALE?: string;
+      /**
+       * Comma-separated list of supported locale codes for i18n module.
+       * Optional: defaults to 'cn,en,fr,ru,vi' if not set.
+       */
+      I18N_SUPPORTED_LOCALES?: string;
+      /**
        * Enable SSL for database connection.
        * Optional: string value to configure SSL settings.
        */

@@ -1,3 +1,4 @@
+import { APP_PIPE } from "@nestjs/core";
 import { Module } from '@nestjs/common';
 import { ConditionalModule, ConfigModule } from '@nestjs/config';
 import { createObserveModule } from '@nestjs/observe';
@@ -7,10 +8,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { CacheModule } from '@nestjs/cache-manager';
 import { BullModule } from "@nestjs/bull";
 import { MailerModule } from '@nestjs-modules/mailer';
+import { I18nModule, I18nValidationPipe } from "@nestjs/i18n";
 import {
   appConfig,
   cacheConfig,
   databaseConfig,
+  i18nConfig,
   mailConfig,
   observeConfig,
   queueConfig,
@@ -25,7 +28,7 @@ export const {ObserveModule, ObserveInstrument} = createObserveModule();
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [appConfig, observeConfig, databaseConfig, swaggerConfig, cacheConfig, queueConfig, mailConfig],
+      load: [appConfig, observeConfig, cacheConfig, databaseConfig, swaggerConfig, i18nConfig, queueConfig, mailConfig],
       validate: validateEnv,
     }),
     // Distributed tracing, auto-correlated logs, request/job metrics, error
@@ -43,6 +46,8 @@ export const {ObserveModule, ObserveInstrument} = createObserveModule();
     CacheModule.registerAsync(cacheConfig.asProvider()),
     // Distributed job processing backed by Redis via BullMQ (no in-memory fallback)
     BullModule.forRootAsync(queueConfig.asProvider()),
+    
+    I18nModule.forRootAsync(i18nConfig.asProvider()),
     // Outbound email service via SMTP (Nodemailer)
     // Only register when mail credentials are provided
     ConditionalModule.registerWhen(
@@ -51,10 +56,23 @@ export const {ObserveModule, ObserveInstrument} = createObserveModule();
         !!env.MAIL_USERNAME &&
         !!env.MAIL_PASSWORD,
     ),
+    // Conditionally activate i18n module when both I18N_DEFAULT_LANGUAGE and I18N_AVAILABLE_LANGUAGES are provided
+    ConditionalModule.registerWhen(
+      I18nModule.forRootAsync(i18nConfig.asProvider()),
+      (env) =>
+        !!env.I18N_DEFAULT_LANGUAGE &&
+        !!env.I18N_AVAILABLE_LANGUAGES,
+    ),
     // Health check endpoints: GET /health and GET /health/ready
     HealthModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_PIPE,
+      useValue: new I18nValidationPipe({whitelist: true, transform: true}),
+    },
+  ],
 })
 export class AppModule {}
