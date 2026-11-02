@@ -18,13 +18,12 @@ export const i18nConfig = registerAs(
     supportedLocales: (process.env.I18N_SUPPORTED_LOCALES ?? 'cn,en,fr,ru,vi').split(','),
     fallbacks: { 'en-US': 'en' },
     loader: new JsonI18nLoader({
-      path: join(import.meta.dirname, 'modules/i18n'),
+      path: join(process.cwd(), 'src', 'modules', 'i18n'),
     }),
     resolvers: [
       new QueryLocaleResolver(process.env.I18N_QUERY_LOCALE ?? 'lang'),
       new HeaderLocaleResolver(process.env.I18N_HEADER_LOCALE ?? 'x-lang'),
       new AcceptLanguageLocaleResolver(),
     ],
-    isGlobal: true,
   })
 );
