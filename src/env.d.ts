@@ -74,6 +74,42 @@ declare global {
        */
       QUEUE_ATTEMPTS?: number;
       /**
+       * SMTP host for outbound email.
+       * Optional: defaults to 'smtp.google.com' if not set.
+       */
+      MAIL_HOST?: string;
+      /**
+       * SMTP port for outbound email.
+       * Required: mail server port (e.g. 587, 465).
+       */
+      MAIL_PORT?: number;
+      /**
+       * SMTP username for authentication.
+       * Required: mail server username.
+       */
+      MAIL_USERNAME?: string;
+      /**
+       * SMTP password or app-specific password.
+       * Required: mail server password.
+       */
+      MAIL_PASSWORD?: string;
+      /**
+       * Default sender email address.
+       * Optional: defaults to 'no-reply@example.com' if not set.
+       * Must be a valid email format.
+       */
+      MAIL_FROM?: string;
+      /**
+       * Enable SSL/TLS for SMTP connection.
+       * Optional: default true. Set to 'false' to disable.
+       */
+      MAIL_SECURE?: string;
+      /**
+       * Enable email preview in development (Mailtrap/io).
+       * Optional: default false. Set to 'true' to enable.
+       */
+      MAIL_PREVIEW?: string;
+      /**
        * Enable SSL for database connection.
        * Optional: string value to configure SSL settings.
        */
