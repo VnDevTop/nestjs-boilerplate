@@ -1,17 +1,20 @@
 import { z } from 'zod';
 
 /**
- * Validates the environment before anything connects, so a missing or unusable
- * setting is a clear error at boot rather than a confusing failure later.
+ * Validates the application environment before any connections are established,
+ * ensuring required configuration is present and correctly typed. Missing or
+ * invalid settings will cause a clear error at boot rather than confusing
+ * failures at runtime.
  *
- * Only the rules are custom. Messages are zod's own, because a schema that
- * describes *what* is wrong is enough; the alternative is a lookup table of
- * wording that has to be kept in step with the constraints themselves.
+ * Validation rules are defined via Zod schema; error messages use Zod's own
+ * descriptive output rather than a separate lookup table.
  */
 
-
 /**
- * Zod schema describing the required environment variables.
+ * Zod schema describing the required environment variables with their
+ * validation rules. Covers application mode, server settings, database
+ * connection, observation service configuration, and Swagger documentation
+ * options.
  */
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
@@ -19,8 +22,10 @@ const envSchema = z.object({
   APP_NAME: z.string().optional(),
   API_PREFIX: z.string().optional(),
   API_VERSION: z.string().optional(),
-  APP_URL: z.string().url().optional(),
+  APP_URL: z.url().optional(),
   DATABASE_URL: z.string().optional(),
+  REDIS_URL: z.url().optional(),
+  CACHE_TTL: z.coerce.number().int().positive().default(300),
   DB_SSL: z.string().optional(),
   DB_SSL_REJECT_UNAUTHORIZED: z.string().optional(),
   OBSERVE_APP_KEY: z.string().optional(),

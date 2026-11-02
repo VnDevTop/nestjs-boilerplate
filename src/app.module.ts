@@ -4,9 +4,9 @@ import { createObserveModule } from '@nestjs/observe';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { appConfig, databaseConfig, observeConfig, swaggerConfig, validateEnv } from './config/index.js';
+import { CacheModule } from '@nestjs/cache-manager';
+import { appConfig, cacheConfig, databaseConfig, observeConfig, swaggerConfig, validateEnv } from './config/index.js';
 import { HealthModule } from './modules/health/health.module.js';
-import { CacheModule } from './cache/cache.module.js';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
@@ -14,7 +14,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [appConfig, observeConfig, databaseConfig, swaggerConfig],
+      load: [appConfig, observeConfig, databaseConfig, swaggerConfig, cacheConfig],
       validate: validateEnv,
     }),
     // Distributed tracing, auto-correlated logs, request/job metrics, error
@@ -29,7 +29,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
     ),
     TypeOrmModule.forRootAsync(databaseConfig.asProvider()),
     // Distributed cache backed by Redis via KeyV (no in-memory fallback)
-    CacheModule,
+    CacheModule.registerAsync(cacheConfig.asProvider()),
     // Health check endpoints: GET /health and GET /health/ready
     HealthModule,
   ],
