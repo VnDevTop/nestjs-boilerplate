@@ -6,6 +6,7 @@ import { AppService } from './app.service.js';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { appConfig, databaseConfig, observeConfig, swaggerConfig, validateEnv } from './config/index.js';
 import { HealthModule } from './modules/health/health.module.js';
+import { CacheModule } from './cache/cache.module.js';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
@@ -27,6 +28,8 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
         !!env.OBSERVE_SERVICE_ID,
     ),
     TypeOrmModule.forRootAsync(databaseConfig.asProvider()),
+    // Distributed cache backed by Redis via KeyV (no in-memory fallback)
+    CacheModule,
     // Health check endpoints: GET /health and GET /health/ready
     HealthModule,
   ],
