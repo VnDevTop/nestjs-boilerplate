@@ -1,0 +1,7 @@
+# Files/directories tokei should ignore when counting lines of code
+package-lock.json
+node_modules/
+dist/
+coverage/
+*.min.js
+*.min.css

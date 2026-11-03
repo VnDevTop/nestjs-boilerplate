@@ -1,0 +1,11 @@
+# Snyk (https://snyk.io) policy file
+version: v1.25.0
+ignore:
+  SNYK-JS-PICOMATCH-21248802:
+    - '*':
+        reason: >-
+          No fixed version is available for picomatch. The vulnerable path is
+          typeorm -> tinyglobby -> picomatch and is only used internally by
+          TypeORM; the application does not pass untrusted glob patterns to it.
+        expires: '2027-01-01T00:00:00.000Z'
+patch: {}
