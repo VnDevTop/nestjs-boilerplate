@@ -45,5 +45,24 @@ export const resilienceConfig = registerAs<ResilienceModuleOptions>(
         maxQueue: Number(process.env.RESILIENCE_BULKHEAD_MAX_QUEUE ?? 0),
       },
     },
+    presets: {
+      default: {
+        retry: Number(process.env.RESILIENCE_RETRY_ATTEMPTS ?? 3),
+        timeout: (process.env.RESILIENCE_TIMEOUT ?? '5s') as any,
+        circuitBreaker: {
+          failureRateThreshold: Number(process.env.RESILIENCE_CIRCUIT_FAILURE_THRESHOLD ?? 50),
+          minimumCalls: Number(process.env.RESILIENCE_CIRCUIT_MINIMUM_CALLS ?? 5),
+          openDuration: (process.env.RESILIENCE_CIRCUIT_OPEN_DURATION ?? '30s') as any,
+        },
+        bulkhead: {
+          maxConcurrent: Number(process.env.RESILIENCE_BULKHEAD_MAX_CONCURRENT ?? 10),
+          maxQueue: Number(process.env.RESILIENCE_BULKHEAD_MAX_QUEUE ?? 0),
+        },
+        fallback: (error: unknown) => {
+          // Default fallback: rethrow so callers receive the original failure.
+          throw error;
+        },
+      },
+    },
   })
 );
