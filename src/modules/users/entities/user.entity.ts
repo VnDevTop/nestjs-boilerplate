@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Column, Entity, Index, Unique } from 'typeorm';
+import { Column, Entity, Index } from 'typeorm';
 
 import { Role } from '../../../common/enums/role.enum.js';
 import { UserStatus } from '../../../common/enums/user-status.enum.js';
@@ -8,13 +8,16 @@ import { BaseEntity } from '../../../database/base.entity.js';
 /**
  * User entity compliant with OIDC standard claims.
  *
+ * Partial unique indexes on `sub` and `email` are created via migration
+ * `1730592000000-partial-unique-indexes.ts` where `deletedAt IS NULL`,
+ * allowing reuse of identifiers after soft delete while keeping active
+ * users unique.
+ *
  * @class User
  */
 @Entity('users')
-@Unique(['sub'])
-@Unique(['email'])
 export class User extends BaseEntity {
-/**
+  /**
    * Subject identifier from the identity provider (OIDC `sub` claim).
    * This is a unique identifier for the user at the identity provider level.
    * Example: `google-oauth2|1234567890`
@@ -24,11 +27,11 @@ export class User extends BaseEntity {
     example: 'google-oauth2|1234567890',
     description: 'Subject identifier from the identity provider.',
   })
-  @Index()
-  @Column({ type: 'varchar', length: 255, unique: true })
+  @Index({ unique: true, where: '"deletedAt" IS NULL' })
+  @Column({ type: 'varchar', length: 255 })
   sub!: string;
 
-/**
+  /**
    * User email address. Must be unique and indexed.
    * Used for authentication and communication with the user.
    * Example: `user@example.com`
@@ -38,11 +41,11 @@ export class User extends BaseEntity {
     example: 'user@example.com',
     description: 'User email address.',
   })
-  @Index()
-  @Column({ type: 'varchar', length: 255, unique: true })
+  @Index({ unique: true, where: '"deletedAt" IS NULL' })
+  @Column({ type: 'varchar', length: 255 })
   email!: string;
 
-/**
+  /**
    * Whether the email address has been verified.
    * `true` if the user has verified their email address through the
    * identity provider or verification flow.
@@ -56,7 +59,7 @@ export class User extends BaseEntity {
   @Column({ type: 'boolean', default: false })
   emailVerified!: boolean;
 
-/**
+  /**
    * Full display name of the user.
    * This is the name shown to other users or in the UI.
    * Can be `null` if not provided.
@@ -70,7 +73,7 @@ export class User extends BaseEntity {
   @Column({ type: 'varchar', length: 255, nullable: true })
   name?: string | null;
 
-/**
+  /**
    * Given name (first name) of the user.
    * Part of the OIDC name claims. Can be `null` if not provided.
    * Example: `Jane`
@@ -83,7 +86,7 @@ export class User extends BaseEntity {
   @Column({ type: 'varchar', length: 255, nullable: true })
   givenName?: string | null;
 
-/**
+  /**
    * Family name (last name) of the user.
    * Part of the OIDC name claims. Can be `null` if not provided.
    * Example: `Doe`
@@ -96,7 +99,7 @@ export class User extends BaseEntity {
   @Column({ type: 'varchar', length: 255, nullable: true })
   familyName?: string | null;
 
-/**
+  /**
    * Profile picture URL of the user.
    * Typically a URL to an avatar or profile photo.
    * Can be `null` if not provided.
@@ -110,7 +113,7 @@ export class User extends BaseEntity {
   @Column({ type: 'varchar', length: 512, nullable: true })
   picture?: string | null;
 
-/**
+  /**
    * Preferred locale for the user (e.g., `en`, `vi`, `fr`).
    * Used to determine the user's language/regional preferences.
    * Can be `null` if not set.
@@ -124,7 +127,7 @@ export class User extends BaseEntity {
   @Column({ type: 'varchar', length: 16, nullable: true })
   locale?: string | null;
 
-/**
+  /**
    * Roles granted to the user.
    * Defines the user's permissions and access levels within the application.
    * Default: `[Role.USER]`
@@ -138,7 +141,7 @@ export class User extends BaseEntity {
   @Column({ type: 'simple-array', default: Role.USER })
   roles!: Role[] | string[];
 
-/**
+  /**
    * Account lifecycle status.
    * Represents the current state of the user account (e.g., active, inactive, suspended).
    * Default: `UserStatus.ACTIVE`
