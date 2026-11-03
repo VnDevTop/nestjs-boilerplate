@@ -6,9 +6,12 @@ import { ResilienceModuleOptions } from '@nestjs/resilience';
  *
  * Defines application-wide default reliability policies applied to HTTP routes,
  * GraphQL resolvers, microservice and WebSocket handlers, or invoked manually
- * via `ResilienceService`. The defaults configured here are:
- * - Timeout: 5 seconds.
- * - Retry: 3 attempts with exponential backoff starting at 200ms (max 2s).
+ * via `ResilienceService`. Retry and timeout defaults are configurable via
+ * environment variables:
+ * - RESILIENCE_TIMEOUT: Default timeout duration (default: '5s').
+ * - RESILIENCE_RETRY_ATTEMPTS: Number of retry attempts (default: 3).
+ * - RESILIENCE_RETRY_DELAY: Initial retry backoff delay (default: '200ms').
+ * - RESILIENCE_RETRY_MAX_DELAY: Maximum retry backoff delay (default: '2s').
  * - Circuit breaker: opens at a 50% failure rate after at least 5 calls,
  *   staying open for 30 seconds.
  *
@@ -22,8 +25,14 @@ export const resilienceConfig = registerAs<ResilienceModuleOptions>(
   'resilience',
   () => ({
     defaults: {
-      timeout: '5s',
-      retry: { attempts: 3, backoff: { delay: '200ms', maxDelay: '2s' } },
+      timeout: (process.env.RESILIENCE_TIMEOUT ?? '5s') as any,
+      retry: {
+        attempts: Number(process.env.RESILIENCE_RETRY_ATTEMPTS ?? 3),
+        backoff: {
+          delay: (process.env.RESILIENCE_RETRY_DELAY ?? '200ms') as any,
+          maxDelay: (process.env.RESILIENCE_RETRY_MAX_DELAY ?? '2s') as any,
+        },
+      },
       circuitBreaker: {
         failureRateThreshold: 50,
         minimumCalls: 5,

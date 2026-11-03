@@ -203,6 +203,26 @@ declare global {
        */
       SWAGGER_ENABLE_ADMIN?: string;
       /**
+       * Default timeout duration for resilience policies.
+       * Optional: duration string (e.g. '5s'). Defaults to '5s'.
+       */
+      RESILIENCE_TIMEOUT?: string;
+      /**
+       * Number of retry attempts for resilience policies.
+       * Optional: positive integer. Defaults to 3.
+       */
+      RESILIENCE_RETRY_ATTEMPTS?: number;
+      /**
+       * Initial retry backoff delay for resilience policies.
+       * Optional: duration string (e.g. '200ms'). Defaults to '200ms'.
+       */
+      RESILIENCE_RETRY_DELAY?: string;
+      /**
+       * Maximum retry backoff delay for resilience policies.
+       * Optional: duration string (e.g. '2s'). Defaults to '2s'.
+       */
+      RESILIENCE_RETRY_MAX_DELAY?: string;
+      /**
        * Allowed origin(s) for CORS.
        * Optional: comma-separated list, '*' for any, or 'true' to reflect request origin. Defaults to reflecting origin.
        */
