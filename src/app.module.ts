@@ -9,6 +9,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { CacheModule } from '@nestjs/cache-manager';
 import { BullModule } from "@nestjs/bull";
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { ScheduleModule } from '@nestjs/schedule';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { I18nModule, I18nValidationPipe } from "@nestjs/i18n";
 import {
@@ -52,6 +53,8 @@ export const {ObserveModule, ObserveInstrument} = createObserveModule();
     BullModule.forRootAsync(queueConfig.asProvider()),
     // Application-wide event emitter (in-process events)
     EventEmitterModule.forRoot(),
+    // Task scheduling (cron jobs, intervals, timeouts)
+    ScheduleModule.forRoot(),
     // Outbound email service via SMTP (Nodemailer)
     // Only register when mail credentials are provided
     ConditionalModule.registerWhen(
