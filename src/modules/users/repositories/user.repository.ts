@@ -1,0 +1,73 @@
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+
+import { User } from '../entities/user.entity.js';
+
+/**
+ * Repository for `User` entities providing data access operations.
+ * Handles CRUD operations and user lookup by unique identifiers.
+ *
+ * @class UserRepository
+ */
+@Injectable()
+export class UserRepository {
+  constructor(
+    @InjectRepository(User)
+    private readonly repository: Repository<User>,
+  ) {}
+
+  /**
+   * Finds a user by subject identifier (OIDC `sub` claim).
+   *
+   * @param sub - Subject identifier from the identity provider.
+   * @returns The matching user or null if not found.
+   */
+  async findBySub(sub: string): Promise<User | null> {
+    return this.repository.findOne({ where: { sub } });
+  }
+
+  /**
+   * Finds a user by email address.
+   *
+   * @param email - User email address (unique).
+   * @returns The matching user or null if not found.
+   */
+  async findByEmail(email: string): Promise<User | null> {
+    return this.repository.findOne({ where: { email } });
+  }
+
+  /**
+   * Creates and persists a new user.
+   *
+   * @param data - Partial user data to create (typically from registration or OAuth).
+   * @returns The created and persisted user entity.
+   */
+  async create(data: Partial<User>): Promise<User> {
+    const user = this.repository.create(data);
+    return this.repository.save(user);
+  }
+
+  /**
+   * Updates an existing user by ID.
+   *
+   * @param id - Unique identifier of the user to update.
+   * @param data - Partial user data to update (partial update).
+   * @returns The updated user or null if not found.
+   */
+  async update(id: string, data: Partial<User>): Promise<User | null> {
+    await this.repository.update(id, data);
+    return this.repository.findOne({ where: { id } });
+  }
+
+  /**
+   * Soft-deletes a user by setting the `deletedAt` timestamp.
+   * Does not physically remove the record from the database.
+   *
+   * @param id - Unique identifier of the user to soft-delete.
+   * @returns Promise that resolves when soft deletion is complete.
+   */
+  async softDelete(id: string): Promise<void> {
+    await this.repository.softDelete(id);
+  }
+}
