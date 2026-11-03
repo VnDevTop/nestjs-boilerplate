@@ -1,3 +1,5 @@
+import type { Duration } from '@nestjs/resilience';
+
 declare global {
   /**
    * Environment variables required for the NestJS application.
@@ -204,9 +206,9 @@ declare global {
       SWAGGER_ENABLE_ADMIN?: string;
       /**
        * Default timeout duration for resilience policies.
-       * Optional: duration string (e.g. '5s'). Defaults to '5s'.
+       * Optional: duration (e.g. '5s'). Defaults to '5s'.
        */
-      RESILIENCE_TIMEOUT?: string;
+      RESILIENCE_TIMEOUT?: Duration;
       /**
        * Number of retry attempts for resilience policies.
        * Optional: positive integer. Defaults to 3.
@@ -214,14 +216,14 @@ declare global {
       RESILIENCE_RETRY_ATTEMPTS?: number;
       /**
        * Initial retry backoff delay for resilience policies.
-       * Optional: duration string (e.g. '200ms'). Defaults to '200ms'.
+       * Optional: duration (e.g. '200ms'). Defaults to '200ms'.
        */
-      RESILIENCE_RETRY_DELAY?: string;
+      RESILIENCE_RETRY_DELAY?: Duration;
       /**
        * Maximum retry backoff delay for resilience policies.
-       * Optional: duration string (e.g. '2s'). Defaults to '2s'.
+       * Optional: duration (e.g. '2s'). Defaults to '2s'.
        */
-      RESILIENCE_RETRY_MAX_DELAY?: string;
+      RESILIENCE_RETRY_MAX_DELAY?: Duration;
       /**
        * Circuit breaker failure rate threshold in percent.
        * Optional: number. Defaults to 50.
@@ -234,9 +236,9 @@ declare global {
       RESILIENCE_CIRCUIT_MINIMUM_CALLS?: number;
       /**
        * Duration the circuit breaker stays open.
-       * Optional: duration string (e.g. '30s'). Defaults to '30s'.
+       * Optional: duration (e.g. '30s'). Defaults to '30s'.
        */
-      RESILIENCE_CIRCUIT_OPEN_DURATION?: string;
+      RESILIENCE_CIRCUIT_OPEN_DURATION?: Duration;
       /**
        * Maximum concurrent calls allowed by the bulkhead.
        * Optional: number. Defaults to 10.
