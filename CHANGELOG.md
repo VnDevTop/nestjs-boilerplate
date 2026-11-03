@@ -5,6 +5,19 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [12.6.1] - 2026-11-03
+
+### Added
+
+- Phase 6.1 cross-cutting core packages: Swagger, class-validator/class-transformer, Zod, typed config, health checks, cache manager, BullMQ queues, mailer, i18n, HTTP (axios), throttling, security headers, CORS, event emitter, and scheduler.
+- `.env.example` documenting all supported environment variables.
+- Unit tests for configuration, core setup functions, global validation pipe, and base entity.
+
+### Changed
+
+- Configuration namespaces use module option types directly and are exposed via the config barrel.
+- CORS and security headers are configured through dedicated setup functions in `src/core`.
+
 ## [12.6.0] - 2026-11-01
 
 ### Added
