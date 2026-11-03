@@ -140,6 +140,24 @@ declare global {
        */
       DB_SSL_REJECT_UNAUTHORIZED?: string;
       /**
+       * Time-to-live for throttle rate limit cache in seconds.
+       * Defaults to 60 seconds if not set.
+       * Must be a positive integer.
+       */
+      THROTTLE_TTL?: number;
+      /**
+       * Maximum number of requests allowed per TTL period.
+       * Defaults to 10 if not set.
+       * Must be a positive integer.
+       */
+      THROTTLE_LIMIT?: number;
+      /**
+       * Duration to block requests after rate limit is exceeded in milliseconds.
+       * Set to 0 to disable blocking (default: 0).
+       * Must be a non-negative integer.
+       */
+      THROTTLE_BLOCK_DURATION?: number;
+      /**
        * Key for NestJS Observe tracing/metrics.
        * Optional: obtained from Observe dashboard.
        */

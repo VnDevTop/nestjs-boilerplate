@@ -1,4 +1,1 @@
-// Barrel export for pipes
-
-
-export {};
+export * from './global-validation.pipe.js';
