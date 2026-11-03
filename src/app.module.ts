@@ -8,6 +8,7 @@ import { AppService } from './app.service.js';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CacheModule } from '@nestjs/cache-manager';
 import { BullModule } from "@nestjs/bull";
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { I18nModule, I18nValidationPipe } from "@nestjs/i18n";
 import {
@@ -49,6 +50,8 @@ export const {ObserveModule, ObserveInstrument} = createObserveModule();
     CacheModule.registerAsync(cacheConfig.asProvider()),
     // Distributed job processing backed by Redis via BullMQ (no in-memory fallback)
     BullModule.forRootAsync(queueConfig.asProvider()),
+    // Application-wide event emitter (in-process events)
+    EventEmitterModule.forRoot(),
     // Outbound email service via SMTP (Nodemailer)
     // Only register when mail credentials are provided
     ConditionalModule.registerWhen(
