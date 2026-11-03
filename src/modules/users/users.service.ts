@@ -94,4 +94,15 @@ export class UsersService {
     await this.userRepository.softDelete(user.id);
     return user;
   }
+
+  /**
+   * Permanently removes users soft-deleted older than the retention period.
+   *
+   * @param retentionDays - Retention period in days.
+   * @returns void
+   */
+  async cleanupDeletedUsers(retentionDays: number): Promise<void> {
+    this.logger.log(`Cleaning up users soft-deleted older than ${retentionDays} days`);
+    await this.userRepository.purgeSoftDeleted(retentionDays);
+  }
 }

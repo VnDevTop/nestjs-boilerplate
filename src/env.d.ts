@@ -250,6 +250,11 @@ declare global {
        */
       RESILIENCE_BULKHEAD_MAX_QUEUE?: number;
       /**
+       * Number of days to retain soft-deleted user records.
+       * Optional: positive integer. Defaults to 30.
+       */
+      RETENTION_DAYS?: number;
+      /**
        * Allowed origin(s) for CORS.
        * Optional: comma-separated list, '*' for any, or 'true' to reflect request origin. Defaults to reflecting origin.
        */

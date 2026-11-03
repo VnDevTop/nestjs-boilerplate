@@ -66,6 +66,7 @@ const envSchema = z.object({
   RESILIENCE_CIRCUIT_OPEN_DURATION: z.custom<Duration>().optional(),
   RESILIENCE_BULKHEAD_MAX_CONCURRENT: z.coerce.number().int().positive().optional(),
   RESILIENCE_BULKHEAD_MAX_QUEUE: z.coerce.number().int().nonnegative().optional(),
+  RETENTION_DAYS: z.coerce.number().int().positive().optional(),
   I18N_DEFAULT_LOCALE: z.string().optional(),
   I18N_SUPPORTED_LOCALES: z.string().optional(),
   I18N_QUERY_LOCALE: z.string().optional(),
