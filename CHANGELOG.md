@@ -5,6 +5,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [12.6.2] - 2026-11-03
+
+### Added
+
+- Phase 6.2 reliability (optional): resilience module, retry/timeout/circuit breaker/bulkhead/fallback configuration, idempotency module, and reliability tests.
+
+### Changed
+
+- Resilience environment variables are typed with `Duration` and validated accordingly.
+
 ## [12.6.1] - 2026-11-03
 
 ### Added
