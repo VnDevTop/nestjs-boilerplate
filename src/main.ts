@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule, ObserveInstrument } from './app.module.js';
 import { setupSwagger } from './core/swagger/index.js';
+import { setupSecurityHeader } from "./core/security-header/index.ts";
 import { createGlobalValidationPipe } from "./common/index.ts";
 
 async function bootstrap() {
@@ -11,6 +12,11 @@ async function bootstrap() {
 
   // Global ValidationPipe configuration using class-validator and class-transformer
   app.useGlobalPipes(createGlobalValidationPipe());
+
+  // Enable built-in security headers (NestJS 12.1+)
+  // Replaces the need for Helmet package
+  // https://docs.nestjs.com/security/helmet
+  setupSecurityHeader(app);
 
   // Configure Swagger with dual endpoints (public + admin)
   // Path, version, and enable/disable are read from environment variables
