@@ -13,6 +13,7 @@ import { I18nModule, I18nValidationPipe } from "@nestjs/i18n";
 import {
   appConfig,
   cacheConfig,
+  corsConfig,
   databaseConfig,
   i18nConfig,
   mailConfig,
@@ -30,7 +31,7 @@ export const {ObserveModule, ObserveInstrument} = createObserveModule();
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [appConfig, observeConfig, cacheConfig, databaseConfig, swaggerConfig, i18nConfig, queueConfig, mailConfig, throttleConfig],
+      load: [appConfig, observeConfig, cacheConfig, corsConfig, databaseConfig, swaggerConfig, i18nConfig, queueConfig, mailConfig, throttleConfig],
       validate: validateEnv,
     }),
     // Distributed tracing, auto-correlated logs, request/job metrics, error

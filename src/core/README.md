@@ -6,6 +6,7 @@ database, caching, queue, mail, i18n, HTTP, throttling, security headers, etc.).
 ## Purpose
 
 - Hosts application-wide providers and modules that are not feature-specific.
+- Includes CORS setup (`src/core/cors`) and security headers (`src/core/security-header`).
 - Aggregates third-party integrations behind NestJS module boundaries.
 - Provides shared infrastructure consumed by feature modules in `src/modules`.
 
