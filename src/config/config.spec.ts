@@ -8,6 +8,7 @@ import { i18nConfig } from './i18n.config.js';
 import { mailConfig } from './mail.config.js';
 import { observeConfig } from './observe.config.js';
 import { queueConfig } from './queue.config.js';
+import { resilienceConfig } from './resilience.config.js';
 import { securityHeaderConfig } from './security-header.config.js';
 import { swaggerConfig } from './swagger.config.js';
 import { throttleConfig } from './throttle.config.js';
@@ -258,6 +259,26 @@ describe('config', () => {
       const config = queueConfig() as any;
       expect(config.url).toBe('redis://localhost:6379');
       expect(config.name).toBe('default');
+    });
+  });
+
+  describe('resilienceConfig', () => {
+    it('returns resilience configuration with defaults', () => {
+      const config = resilienceConfig() as any;
+      expect(config.defaults.timeout).toBe('5s');
+      expect(config.defaults.retry.attempts).toBe(3);
+      expect(config.defaults.circuitBreaker).toBeDefined();
+      expect(config.defaults.bulkhead).toBeDefined();
+      expect(config.presets.default).toBeDefined();
+      expect(() => config.presets.default.fallback(new Error('boom'))).toThrow('boom');
+    });
+
+    it('reflects environment overrides', () => {
+      (process.env as any).RESILIENCE_TIMEOUT = '10s';
+      (process.env as any).RESILIENCE_RETRY_ATTEMPTS = '5';
+      const config = resilienceConfig() as any;
+      expect(config.defaults.timeout).toBe('10s');
+      expect(config.defaults.retry.attempts).toBe(5);
     });
   });
 
