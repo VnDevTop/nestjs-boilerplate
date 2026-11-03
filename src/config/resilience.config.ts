@@ -27,18 +27,18 @@ export const resilienceConfig = registerAs<ResilienceModuleOptions>(
   'resilience',
   () => ({
     defaults: {
-      timeout: (process.env.RESILIENCE_TIMEOUT ?? '5s') as any,
+      timeout: process.env.RESILIENCE_TIMEOUT ?? '5s',
       retry: {
         attempts: Number(process.env.RESILIENCE_RETRY_ATTEMPTS ?? 3),
         backoff: {
-          delay: (process.env.RESILIENCE_RETRY_DELAY ?? '200ms') as any,
-          maxDelay: (process.env.RESILIENCE_RETRY_MAX_DELAY ?? '2s') as any,
+          delay: process.env.RESILIENCE_RETRY_DELAY ?? '200ms',
+          maxDelay: process.env.RESILIENCE_RETRY_MAX_DELAY ?? '2s',
         },
       },
       circuitBreaker: {
         failureRateThreshold: Number(process.env.RESILIENCE_CIRCUIT_FAILURE_THRESHOLD ?? 50),
         minimumCalls: Number(process.env.RESILIENCE_CIRCUIT_MINIMUM_CALLS ?? 5),
-        openDuration: (process.env.RESILIENCE_CIRCUIT_OPEN_DURATION ?? '30s') as any,
+        openDuration: process.env.RESILIENCE_CIRCUIT_OPEN_DURATION ?? '30s',
       },
       bulkhead: {
         maxConcurrent: Number(process.env.RESILIENCE_BULKHEAD_MAX_CONCURRENT ?? 10),
@@ -48,11 +48,11 @@ export const resilienceConfig = registerAs<ResilienceModuleOptions>(
     presets: {
       default: {
         retry: Number(process.env.RESILIENCE_RETRY_ATTEMPTS ?? 3),
-        timeout: (process.env.RESILIENCE_TIMEOUT ?? '5s') as any,
+        timeout: process.env.RESILIENCE_TIMEOUT ?? '5s',
         circuitBreaker: {
           failureRateThreshold: Number(process.env.RESILIENCE_CIRCUIT_FAILURE_THRESHOLD ?? 50),
           minimumCalls: Number(process.env.RESILIENCE_CIRCUIT_MINIMUM_CALLS ?? 5),
-          openDuration: (process.env.RESILIENCE_CIRCUIT_OPEN_DURATION ?? '30s') as any,
+          openDuration: process.env.RESILIENCE_CIRCUIT_OPEN_DURATION ?? '30s',
         },
         bulkhead: {
           maxConcurrent: Number(process.env.RESILIENCE_BULKHEAD_MAX_CONCURRENT ?? 10),

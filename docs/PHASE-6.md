@@ -119,4 +119,20 @@ npm run test:e2e
 ```
 
 All commands pass on the `feat/project-structure` branch.
-```
+
+### Phase 6.2 — Reliability (optional)
+
+- `chore(deps): add phase 3 dependencies`
+  - Added `@nestjs/resilience` and `@nestjs/idempotency`.
+- `feat(resilience): add resilience module`
+  - Registered `ResilienceModule.forRoot()` in `AppModule`.
+- `feat(resilience): configure retry and timeout policies`
+  - Configured default retry/timeout policies via `src/config/resilience.config.ts` (env-driven).
+- `feat(resilience): add circuit breaker and bulkhead`
+  - Added circuit breaker and bulkhead defaults (env-driven thresholds).
+- `feat(resilience): add fallback handlers`
+  - Added a default preset with a fallback handler in `resilience.config.ts`.
+- `feat(idempotency): add idempotency module`
+  - Registered `IdempotencyModule.forRoot()` in `AppModule`.
+- `test(resilience): add reliability tests`
+  - Added unit tests for `resilienceConfig` (including env overrides and fallback).
