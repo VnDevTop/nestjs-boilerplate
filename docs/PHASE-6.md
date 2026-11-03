@@ -26,6 +26,8 @@ documentation foundations. Core packages will be added incrementally.
 
 ### Phase 6.1 — Cross-cutting core packages (started)
 
+- `chore(deps): add phase 2 dependencies`
+  - Added Phase 6.1 runtime dependencies (swagger, validation, cache, queue, mail, i18n, http, throttle, security headers, cors, events, schedule).
 - `feat(swagger): add openapi documentation with setupSwagger`
   - Added `@nestjs/swagger` and `src/core/swagger/` module.
   - Created `setupSwagger()` function to manage Swagger configuration.
@@ -82,7 +84,33 @@ documentation foundations. Core packages will be added incrementally.
   - Language settings configurable via environment variables (`I18N_DEFAULT_LANGUAGE`, `I18N_AVAILABLE_LANGUAGES`).
   - i18n module registered in `AppModule` via `I18nModule.forRoot()` with language options.
   - Supports language switching and locale middleware for i18n middleware.
+- `feat(http): add axios http module`
+  - Added `@nestjs/axios` and `axios` dependencies for HTTP client integration.
+- `feat(throttle): add rate limiting`
+  - Added `@nestjs/throttler` and Redis-backed throttler storage.
+  - Registered `ThrottlerModule` and `ThrottlerGuard` globally in `AppModule`.
+- `feat(helmet): add security headers`
+  - Added `src/config/security-header.config.ts` (`securityHeaderConfig`) and `src/core/security-header/` (`setupSecurityHeader`).
+  - Security headers applied globally via `app.useSecurityHeaders()` in `main.ts`.
 - `feat(config): use module option types directly`
+- `feat(cors): add cors support`
+  - Added `src/config/cors.config.ts` (`corsConfig`) and `src/core/cors/` (`setupCors`).
+  - CORS is enabled globally via `app.enableCors()` using env-driven options (`CORS_ORIGIN`, `CORS_METHODS`, `CORS_ALLOWED_HEADERS`, `CORS_EXPOSED_HEADERS`, `CORS_CREDENTIALS`, `CORS_MAX_AGE`, `CORS_PREFLIGHT_CONTINUE`, `CORS_OPTIONS_SUCCESS_STATUS`).
+  - Registered `corsConfig` in `AppModule` and invoked `setupCors(app)` in `main.ts`.
+- `feat(events): add event emitter`
+  - Added `@nestjs/event-emitter` and registered `EventEmitterModule.forRoot()` in `AppModule`.
+- `feat(schedule): add scheduler`
+  - Added `@nestjs/schedule` and registered `ScheduleModule.forRoot()` in `AppModule`.
+- `chore(config): move ProcessEnv declaration to env.d.ts`
+  - `NodeJS.ProcessEnv` declarations (including CORS variables) live in `src/env.d.ts`.
+- `chore(config): use module option types directly`
+  - Configuration namespaces use their module option types directly (`CorsOptions`, `SecurityHeadersOptions`, `CacheModuleOptions`, etc.).
+- `chore(app): shorten config imports via barrel`
+  - `AppModule` imports configuration through `src/config/index.ts` barrel.
+- `test(config): add config unit tests`
+  - Added `src/config/config.spec.ts` covering `validateEnv` and all config namespaces (including CORS branches).
+- Test coverage improvements
+  - Added unit tests for `src/core` setup functions, `src/common/pipes/global-validation.pipe.ts`, and `src/database/base.entity.ts`.
 npm run lint
 npx tsc --noEmit
 npm run build
