@@ -12,8 +12,10 @@ import { ResilienceModuleOptions } from '@nestjs/resilience';
  * - RESILIENCE_RETRY_ATTEMPTS: Number of retry attempts (default: 3).
  * - RESILIENCE_RETRY_DELAY: Initial retry backoff delay (default: '200ms').
  * - RESILIENCE_RETRY_MAX_DELAY: Maximum retry backoff delay (default: '2s').
- * - Circuit breaker: opens at a 50% failure rate after at least 5 calls,
- *   staying open for 30 seconds.
+ * - Circuit breaker: opens at a configurable failure rate (default 50%) after
+ *   at least 5 calls, staying open for 30 seconds.
+ * - Bulkhead: limits concurrent calls (default 10) with no queued calls by
+ *   default.
  *
  * Policies can be overridden per handler using decorators such as `@Retry()`,
  * `@Timeout()`, `@CircuitBreaker()`, `@Bulkhead()`, `@Fallback()` and
@@ -34,9 +36,13 @@ export const resilienceConfig = registerAs<ResilienceModuleOptions>(
         },
       },
       circuitBreaker: {
-        failureRateThreshold: 50,
-        minimumCalls: 5,
-        openDuration: '30s',
+        failureRateThreshold: Number(process.env.RESILIENCE_CIRCUIT_FAILURE_THRESHOLD ?? 50),
+        minimumCalls: Number(process.env.RESILIENCE_CIRCUIT_MINIMUM_CALLS ?? 5),
+        openDuration: (process.env.RESILIENCE_CIRCUIT_OPEN_DURATION ?? '30s') as any,
+      },
+      bulkhead: {
+        maxConcurrent: Number(process.env.RESILIENCE_BULKHEAD_MAX_CONCURRENT ?? 10),
+        maxQueue: Number(process.env.RESILIENCE_BULKHEAD_MAX_QUEUE ?? 0),
       },
     },
   })

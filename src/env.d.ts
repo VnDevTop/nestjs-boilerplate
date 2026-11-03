@@ -223,6 +223,31 @@ declare global {
        */
       RESILIENCE_RETRY_MAX_DELAY?: string;
       /**
+       * Circuit breaker failure rate threshold in percent.
+       * Optional: number. Defaults to 50.
+       */
+      RESILIENCE_CIRCUIT_FAILURE_THRESHOLD?: number;
+      /**
+       * Minimum calls before the circuit breaker evaluates the failure rate.
+       * Optional: number. Defaults to 5.
+       */
+      RESILIENCE_CIRCUIT_MINIMUM_CALLS?: number;
+      /**
+       * Duration the circuit breaker stays open.
+       * Optional: duration string (e.g. '30s'). Defaults to '30s'.
+       */
+      RESILIENCE_CIRCUIT_OPEN_DURATION?: string;
+      /**
+       * Maximum concurrent calls allowed by the bulkhead.
+       * Optional: number. Defaults to 10.
+       */
+      RESILIENCE_BULKHEAD_MAX_CONCURRENT?: number;
+      /**
+       * Maximum queued calls allowed by the bulkhead.
+       * Optional: number. Defaults to 0.
+       */
+      RESILIENCE_BULKHEAD_MAX_QUEUE?: number;
+      /**
        * Allowed origin(s) for CORS.
        * Optional: comma-separated list, '*' for any, or 'true' to reflect request origin. Defaults to reflecting origin.
        */
