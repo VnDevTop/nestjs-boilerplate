@@ -2,6 +2,7 @@
 
 export { appConfig } from './app.config.js';
 export { cacheConfig } from './cache.config.js';
+export { corsConfig } from './cors.config.js';
 export { databaseConfig } from './database.config.js';
 export { mailConfig } from './mail.config.js';
 export { observeConfig } from './observe.config.js';

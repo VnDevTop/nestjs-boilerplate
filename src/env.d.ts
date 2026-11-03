@@ -202,6 +202,46 @@ declare global {
        * Optional: boolean-like string to enable admin features in Swagger.
        */
       SWAGGER_ENABLE_ADMIN?: string;
+      /**
+       * Allowed origin(s) for CORS.
+       * Optional: comma-separated list, '*' for any, or 'true' to reflect request origin. Defaults to reflecting origin.
+       */
+      CORS_ORIGIN?: string;
+      /**
+       * Allowed HTTP methods for CORS.
+       * Optional: comma-separated list. Defaults to GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS.
+       */
+      CORS_METHODS?: string;
+      /**
+       * Allowed request headers for CORS.
+       * Optional: comma-separated list. Defaults to reflecting request headers.
+       */
+      CORS_ALLOWED_HEADERS?: string;
+      /**
+       * Exposed response headers for CORS.
+       * Optional: comma-separated list.
+       */
+      CORS_EXPOSED_HEADERS?: string;
+      /**
+       * Whether to allow credentials for CORS.
+       * Optional: 'true' to enable. Defaults to false.
+       */
+      CORS_CREDENTIALS?: string;
+      /**
+       * Preflight cache duration in seconds for CORS.
+       * Optional: positive integer.
+       */
+      CORS_MAX_AGE?: number;
+      /**
+       * Whether to pass preflight requests to next handler for CORS.
+       * Optional: 'true' to enable. Defaults to false.
+       */
+      CORS_PREFLIGHT_CONTINUE?: string;
+      /**
+       * Status code for successful CORS OPTIONS requests.
+       * Optional: integer. Defaults to 204.
+       */
+      CORS_OPTIONS_SUCCESS_STATUS?: number;
     }
   }
 }
