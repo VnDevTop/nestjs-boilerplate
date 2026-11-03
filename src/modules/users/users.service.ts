@@ -1,8 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { User } from './entities/user.entity.js';
 import { UserRepository } from './repositories/user.repository.js';
+import { Role } from '../../common/enums/role.enum.js';
 
 @Injectable()
 export class UsersService {
@@ -64,8 +65,18 @@ export class UsersService {
    * @returns The updated user or null.
    */
   async changeRoles(id: string, roleIds: string[]): Promise<User | null> {
+    const validRoles = Object.values(Role);
+    const invalid = roleIds.filter((role) => !validRoles.includes(role as Role));
+    if (invalid.length > 0) {
+      throw new BadRequestException(`Invalid roles: ${invalid.join(', ')}`);
+    }
+
     this.logger.log(`Changing roles for user ID: ${id} to: ${roleIds}`);
-    return this.userRepository.update(id, { roles: roleIds });
+    const updated = await this.userRepository.update(id, { roles: roleIds });
+    if (updated) {
+      this.logger.log(`Roles updated for user ID: ${id}`);
+    }
+    return updated;
   }
 
   /**

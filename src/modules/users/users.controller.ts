@@ -1,7 +1,11 @@
-import { Body, Controller, Get, Param, Patch, Req } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Req, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
+import { Roles } from '../../common/decorators/roles.decorator.js';
+import { RolesGuard } from '../../common/guards/roles.guard.js';
+import { Role } from '../../common/enums/role.enum.js';
 import { UsersService } from './users.service.js';
+import { ChangeRolesDto } from './dto/change-roles.dto.js';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto.js';
 
 /**
@@ -50,5 +54,17 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'User profile' })
   async getUserById(@Param('id') id: string) {
     return this.usersService.findById(id);
+  }
+
+  /**
+   * Changes a user's roles (admin-only).
+   */
+  @Patch(':id/roles')
+  @Roles(Role.ADMIN)
+  @UseGuards(RolesGuard)
+  @ApiOperation({ summary: 'Change user roles' })
+  @ApiResponse({ status: 200, description: 'Updated user roles' })
+  async changeRoles(@Param('id') id: string, @Body() dto: ChangeRolesDto) {
+    return this.usersService.changeRoles(id, dto.roles);
   }
 }

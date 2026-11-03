@@ -1,4 +1,3 @@
 // Barrel export for guards
 
-
-export {};
+export * from './roles.guard.js';
