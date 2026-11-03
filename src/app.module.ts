@@ -1,7 +1,8 @@
-import { APP_PIPE } from "@nestjs/core";
+import { APP_GUARD, APP_PIPE } from "@nestjs/core";
 import { Module } from '@nestjs/common';
 import { ConditionalModule, ConfigModule } from '@nestjs/config';
 import { createObserveModule } from '@nestjs/observe';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -18,6 +19,7 @@ import {
   observeConfig,
   queueConfig,
   swaggerConfig,
+  throttleConfig,
   validateEnv
 } from './config/index.js';
 import { HealthModule } from './modules/health/health.module.js';
@@ -28,7 +30,7 @@ export const {ObserveModule, ObserveInstrument} = createObserveModule();
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [appConfig, observeConfig, cacheConfig, databaseConfig, swaggerConfig, i18nConfig, queueConfig, mailConfig],
+      load: [appConfig, observeConfig, cacheConfig, databaseConfig, swaggerConfig, i18nConfig, queueConfig, mailConfig, throttleConfig],
       validate: validateEnv,
     }),
     // Distributed tracing, auto-correlated logs, request/job metrics, error
@@ -61,6 +63,8 @@ export const {ObserveModule, ObserveInstrument} = createObserveModule();
         !!env.I18N_DEFAULT_LOCALE &&
         !!env.I18N_SUPPORTED_LOCALES,
     ),
+    // Rate limiting (throttling) — prevents abuse by limiting requests per IP
+    ThrottlerModule.forRootAsync(throttleConfig.asProvider()),
     // Health check endpoints: GET /health and GET /health/ready
     HealthModule,
   ],
@@ -71,6 +75,10 @@ export const {ObserveModule, ObserveInstrument} = createObserveModule();
       provide: APP_PIPE,
       useValue: new I18nValidationPipe({whitelist: true, transform: true}),
     },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    }
   ],
 })
 export class AppModule {}

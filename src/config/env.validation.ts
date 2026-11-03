@@ -52,6 +52,9 @@ const envSchema = z.object({
   I18N_SUPPORTED_LOCALES: z.string().optional(),
   I18N_QUERY_LOCALE: z.string().optional(),
   I18N_HEADER_LOCALE: z.string().optional(),
+  THROTTLE_TTL: z.coerce.number().int().positive().optional(),
+  THROTTLE_LIMIT: z.coerce.number().int().positive().optional(),
+  THROTTLE_BLOCK_DURATION: z.coerce.number().int().optional(),
 });
 
 /**
