@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { Duration } from '@nestjs/resilience';
 
 /**
  * Validates the application environment before any connections are established,
@@ -56,13 +57,13 @@ const envSchema = z.object({
   SWAGGER_PATH: z.string().optional(),
   SWAGGER_ADMIN_PATH: z.string().optional(),
   SWAGGER_ENABLE_ADMIN: z.string().optional(),
-  RESILIENCE_TIMEOUT: z.string().optional(),
+  RESILIENCE_TIMEOUT: z.custom<Duration>().optional(),
   RESILIENCE_RETRY_ATTEMPTS: z.coerce.number().int().positive().optional(),
-  RESILIENCE_RETRY_DELAY: z.string().optional(),
-  RESILIENCE_RETRY_MAX_DELAY: z.string().optional(),
+  RESILIENCE_RETRY_DELAY: z.custom<Duration>().optional(),
+  RESILIENCE_RETRY_MAX_DELAY: z.custom<Duration>().optional(),
   RESILIENCE_CIRCUIT_FAILURE_THRESHOLD: z.coerce.number().int().positive().optional(),
   RESILIENCE_CIRCUIT_MINIMUM_CALLS: z.coerce.number().int().positive().optional(),
-  RESILIENCE_CIRCUIT_OPEN_DURATION: z.string().optional(),
+  RESILIENCE_CIRCUIT_OPEN_DURATION: z.custom<Duration>().optional(),
   RESILIENCE_BULKHEAD_MAX_CONCURRENT: z.coerce.number().int().positive().optional(),
   RESILIENCE_BULKHEAD_MAX_QUEUE: z.coerce.number().int().nonnegative().optional(),
   I18N_DEFAULT_LOCALE: z.string().optional(),
