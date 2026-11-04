@@ -29,6 +29,7 @@ import {
   throttleConfig,
   validateEnv
 } from './config/index.js';
+import { AdminModule } from './modules/admin/admin.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { UsersModule } from './modules/users/users.module.js';
@@ -88,6 +89,8 @@ export const {ObserveModule, ObserveInstrument} = createObserveModule();
     UsersModule,
     // Authentication & authorization
     AuthModule,
+    // Admin endpoints
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [
