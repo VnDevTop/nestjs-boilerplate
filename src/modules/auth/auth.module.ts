@@ -3,6 +3,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 
 import { UsersModule } from '../users/users.module.js';
+import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
@@ -27,7 +28,7 @@ import { jwtConfig } from '../../config/jwt.config.js';
     JwtModule.registerAsync(jwtConfig.asProvider()),
   ],
   controllers: [AuthController],
-  providers: [AuthService, PasswordService, JwtStrategy, JwtAuthGuard, AuthGuard, RolesGuard],
-  exports: [AuthService, PasswordService, JwtStrategy, JwtAuthGuard, AuthGuard, RolesGuard, JwtModule, PassportModule],
+  providers: [AuthService, PasswordService, JwtStrategy, JwtAuthGuard, AuthGuard, PermissionsGuard, RolesGuard],
+  exports: [AuthService, PasswordService, JwtStrategy, JwtAuthGuard, AuthGuard, PermissionsGuard, RolesGuard, JwtModule, PassportModule],
 })
 export class AuthModule {}
