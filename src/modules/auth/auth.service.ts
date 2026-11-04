@@ -29,6 +29,63 @@ export class AuthService {
   ) {}
 
   /**
+   * Issues a JWT access token and refresh token pair.
+   *
+   * Access tokens are short-lived (15m by default) and used for API
+   * authentication. Refresh tokens are long-lived (7d by default) and
+   * used to obtain new access tokens without re-authenticating.
+   *
+   * @param payload - JWT payload.
+   * @returns Token pair with access and refresh tokens.
+   */
+  async issueTokens(payload: JwtPayload): Promise<TokenPair> {
+    const accessToken = await this.jwtService.signAsync(payload, {
+      expiresIn: '15m',
+    });
+    const refreshToken = await this.jwtService.signAsync(
+      { ...payload, type: 'refresh' },
+      { secret: process.env.JWT_REFRESH_SECRET ?? process.env.JWT_SECRET ?? 'change-me-in-production', expiresIn: '7d' },
+    );
+    return {
+      accessToken,
+      refreshToken,
+      expiresIn: 15 * 60, // 15 minutes in seconds
+      tokenType: 'Bearer',
+    };
+  }
+
+  /**
+   * Refreshes an access token using a valid refresh token.
+   *
+   * @param refreshToken - The refresh token string.
+   * @returns New token pair.
+   */
+  async refreshTokens(refreshToken: string): Promise<TokenPair> {
+    try {
+      const payload = await this.jwtService.verifyAsync(refreshToken, {
+        secret: process.env.JWT_REFRESH_SECRET ?? process.env.JWT_SECRET ?? 'change-me-in-production',
+      });
+
+      if (payload.type !== 'refresh') {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+
+      const user = await this.usersService.findById(payload.sub);
+      if (!user) {
+        throw new UnauthorizedException('User not found');
+      }
+
+      return this.issueTokens({
+        sub: user.id,
+        email: user.email,
+        roles: user.roles as any,
+      });
+    } catch {
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
+  }
+
+  /**
    * Validates a user by email and password.
    *
    * @param email - User email.
@@ -115,23 +172,6 @@ export class AuthService {
     });
 
     return { user: requestUser, tokens };
-  }
-
-  /**
-   * Issues a JWT access token and refresh token pair.
-   *
-   * @param payload - JWT payload.
-   * @returns Token pair.
-   */
-  async issueTokens(payload: JwtPayload): Promise<TokenPair> {
-    const accessToken = await this.jwtService.signAsync(payload, {
-      expiresIn: '15m',
-    });
-    const refreshToken = await this.jwtService.signAsync(
-      { ...payload, type: 'refresh' },
-      { expiresIn: '7d' },
-    );
-    return { accessToken, refreshToken };
   }
 
   /**

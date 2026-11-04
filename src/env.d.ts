@@ -132,6 +132,27 @@ declare global {
        */
       I18N_HEADER_LOCALE?: string;
       /**
+       * Secret key for signing JWT access tokens.
+       * Optional: defaults to 'change-me-in-production' if not set.
+       * Must be changed in production.
+       */
+      JWT_SECRET?: string;
+      /**
+       * Secret key for signing JWT refresh tokens.
+       * Optional: defaults to JWT_SECRET if not set.
+       */
+      JWT_REFRESH_SECRET?: string;
+      /**
+       * Access token lifetime.
+       * Optional: defaults to '15m' if not set.
+       */
+      JWT_EXPIRES_IN?: string;
+      /**
+       * Refresh token lifetime.
+       * Optional: defaults to '7d' if not set.
+       */
+      JWT_REFRESH_EXPIRES_IN?: string;
+      /**
        * Enable SSL for database connection.
        * Optional: string value to configure SSL settings.
        */

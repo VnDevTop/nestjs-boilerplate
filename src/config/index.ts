@@ -10,6 +10,7 @@ export { queueConfig } from './queue.config.js';
 export { retentionConfig } from './retention.config.js';
 export { resilienceConfig } from './resilience.config.js';
 export { i18nConfig } from './i18n.config.js';
+export { jwtConfig } from './jwt.config.js';
 export { securityHeaderConfig } from './security-header.config.js';
 export { swaggerConfig } from './swagger.config.js';
 export { throttleConfig } from './throttle.config.js';

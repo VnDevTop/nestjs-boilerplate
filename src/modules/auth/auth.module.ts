@@ -6,6 +6,7 @@ import { UsersModule } from '../users/users.module.js';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
 import { PasswordService } from './password.service.js';
+import { jwtConfig } from '../../config/jwt.config.js';
 
 /**
  * Authentication module.
@@ -19,12 +20,7 @@ import { PasswordService } from './password.service.js';
   imports: [
     UsersModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
-    JwtModule.register({
-      secret: process.env.JWT_SECRET ?? 'change-me-in-production',
-      signOptions: {
-        expiresIn: (process.env.JWT_EXPIRES_IN ?? '15m') as any,
-      },
-    }),
+    JwtModule.registerAsync(jwtConfig.asProvider()),
   ],
   controllers: [AuthController],
   providers: [AuthService, PasswordService],
