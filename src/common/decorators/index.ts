@@ -1,4 +1,3 @@
 // Barrel export for decorators
 
-
-export {};
+export * from './roles.decorator.js';

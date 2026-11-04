@@ -23,6 +23,7 @@ import {
   mailConfig,
   observeConfig,
   queueConfig,
+  retentionConfig,
   swaggerConfig,
   throttleConfig,
   validateEnv
@@ -35,7 +36,7 @@ export const {ObserveModule, ObserveInstrument} = createObserveModule();
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [appConfig, observeConfig, cacheConfig, corsConfig, databaseConfig, swaggerConfig, i18nConfig, queueConfig, mailConfig, throttleConfig],
+      load: [appConfig, observeConfig, cacheConfig, corsConfig, databaseConfig, swaggerConfig, i18nConfig, queueConfig, retentionConfig, mailConfig, throttleConfig],
       validate: validateEnv,
     }),
     // Distributed tracing, auto-correlated logs, request/job metrics, error

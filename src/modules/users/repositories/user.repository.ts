@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { LessThan, Repository } from 'typeorm';
 
 import { User } from '../entities/user.entity.js';
 
@@ -69,5 +69,17 @@ export class UserRepository {
    */
   async softDelete(id: string): Promise<void> {
     await this.repository.softDelete(id);
+  }
+
+  /**
+   * Permanently removes users soft-deleted older than the given number of days.
+   *
+   * @param olderThanDays - Retention period in days.
+   * @returns void
+   */
+  async purgeSoftDeleted(olderThanDays: number): Promise<void> {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - olderThanDays);
+    await this.repository.delete({ deletedAt: LessThan(cutoff) });
   }
 }
