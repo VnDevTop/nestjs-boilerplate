@@ -72,6 +72,26 @@ describe('UserRepository', () => {
     });
   });
 
+  describe('findById', () => {
+    it('should find user by id', async () => {
+      vi.mocked(mockRepository.findOne).mockResolvedValue(mockUser);
+
+      const result = await repository.findById('user-1');
+
+      expect(result).toEqual(mockUser);
+      expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { id: 'user-1' } });
+    });
+
+    it('should return null when user not found by id', async () => {
+      vi.mocked(mockRepository.findOne).mockResolvedValue(null);
+
+      const result = await repository.findById('non-existent');
+
+      expect(result).toBeNull();
+      expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { id: 'non-existent' } });
+    });
+  });
+
   describe('findByEmail', () => {
     it('should find user by email', async () => {
       vi.mocked(mockRepository.findOne).mockResolvedValue(mockUser);

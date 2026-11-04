@@ -21,27 +21,30 @@ describe('UsersController (e2e)', () => {
   });
 
   describe('GET /users/:id', () => {
-    it('should return null for non-existent user', async () => {
+    it('should return 401 without authentication', async () => {
       const res = await request(app.getHttpServer())
         .get('/users/non-existent-id');
-      expect(res.status).toBe(200);
+
+      expect(res.status).toBe(401);
     });
   });
 
   describe('GET /users/me', () => {
-    it('should return null when no user is authenticated', async () => {
+    it('should return 401 without authentication', async () => {
       const res = await request(app.getHttpServer())
         .get('/users/me');
-      expect(res.status).toBe(200);
+
+      expect(res.status).toBe(401);
     });
   });
 
   describe('PATCH /users/me', () => {
-    it('should return null when no user is authenticated', async () => {
+    it('should return 401 without authentication', async () => {
       const res = await request(app.getHttpServer())
         .patch('/users/me')
         .send({ name: 'Updated Name' });
-      expect(res.status).toBe(200);
+
+      expect(res.status).toBe(401);
     });
   });
 });

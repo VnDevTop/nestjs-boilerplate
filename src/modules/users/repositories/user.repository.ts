@@ -28,6 +28,16 @@ export class UserRepository {
   }
 
   /**
+   * Finds a user by primary key ID.
+   *
+   * @param id - User primary key ID.
+   * @returns The matching user or null if not found.
+   */
+  async findById(id: string): Promise<User | null> {
+    return this.repository.findOne({ where: { id } });
+  }
+
+  /**
    * Finds a user by email address.
    *
    * @param email - User email address (unique).

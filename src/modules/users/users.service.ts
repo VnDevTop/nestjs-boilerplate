@@ -30,7 +30,7 @@ export class UsersService {
    * @returns The matching user or null.
    */
   async findById(id: string): Promise<User | null> {
-    return this.userRepository.findBySub(id);
+    return this.userRepository.findById(id);
   }
 
   /**

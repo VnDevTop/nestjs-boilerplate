@@ -37,7 +37,9 @@ describe('UsersService', () => {
           useValue: {
             create: vi.fn(),
             findBySub: vi.fn(),
+            findById: vi.fn(),
             findByEmail: vi.fn(),
+            findByEmailWithPassword: vi.fn(),
             update: vi.fn(),
             softDelete: vi.fn(),
             purgeSoftDeleted: vi.fn(),
@@ -64,21 +66,21 @@ describe('UsersService', () => {
 
   describe('findById', () => {
     it('should return a user when found', async () => {
-      vi.mocked(userRepository.findBySub).mockResolvedValue(mockUser);
+      vi.mocked(userRepository.findById).mockResolvedValue(mockUser);
 
-      const result = await service.findById('sub-123');
+      const result = await service.findById('user-1');
 
       expect(result).toEqual(mockUser);
-      expect(userRepository.findBySub).toHaveBeenCalledWith('sub-123');
+      expect(userRepository.findById).toHaveBeenCalledWith('user-1');
     });
 
     it('should return null when user not found', async () => {
-      vi.mocked(userRepository.findBySub).mockResolvedValue(null);
+      vi.mocked(userRepository.findById).mockResolvedValue(null);
 
       const result = await service.findById('non-existent');
 
       expect(result).toBeNull();
-      expect(userRepository.findBySub).toHaveBeenCalledWith('non-existent');
+      expect(userRepository.findById).toHaveBeenCalledWith('non-existent');
     });
   });
 
@@ -99,6 +101,27 @@ describe('UsersService', () => {
 
       expect(result).toBeNull();
       expect(userRepository.findByEmail).toHaveBeenCalledWith('nonexistent@example.com');
+    });
+  });
+
+  describe('findByEmailWithPassword', () => {
+    it('should return a user with password hash when found', async () => {
+      const userWithPassword = { ...mockUser, passwordHash: 'hashed-password' };
+      vi.mocked(userRepository.findByEmailWithPassword).mockResolvedValue(userWithPassword);
+
+      const result = await service.findByEmailWithPassword('test@example.com');
+
+      expect(result).toEqual(userWithPassword);
+      expect(userRepository.findByEmailWithPassword).toHaveBeenCalledWith('test@example.com');
+    });
+
+    it('should return null when user not found', async () => {
+      vi.mocked(userRepository.findByEmailWithPassword).mockResolvedValue(null);
+
+      const result = await service.findByEmailWithPassword('nonexistent@example.com');
+
+      expect(result).toBeNull();
+      expect(userRepository.findByEmailWithPassword).toHaveBeenCalledWith('nonexistent@example.com');
     });
   });
 

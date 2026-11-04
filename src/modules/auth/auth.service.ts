@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 
 import { UsersService } from '../users/users.service.js';
 import { PasswordService } from './password.service.js';
+import { jwtConfig } from '../../config/jwt.config.js';
 import { AuthResult } from '../../common/interfaces/auth-result.interface.js';
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface.js';
 import { TokenPair } from '../../common/interfaces/token-pair.interface.js';
@@ -44,7 +45,7 @@ export class AuthService {
     });
     const refreshToken = await this.jwtService.signAsync(
       { ...payload, type: 'refresh' },
-      { secret: process.env.JWT_REFRESH_SECRET ?? process.env.JWT_SECRET ?? 'change-me-in-production', expiresIn: '7d' },
+      { secret: jwtConfig().refreshSecret, expiresIn: jwtConfig().refreshExpiresIn as any },
     );
     return {
       accessToken,
@@ -63,7 +64,7 @@ export class AuthService {
   async refreshTokens(refreshToken: string): Promise<TokenPair> {
     try {
       const payload = await this.jwtService.verifyAsync(refreshToken, {
-        secret: process.env.JWT_REFRESH_SECRET ?? process.env.JWT_SECRET ?? 'change-me-in-production',
+        secret: jwtConfig().refreshSecret,
       });
 
       if (payload.type !== 'refresh') {
