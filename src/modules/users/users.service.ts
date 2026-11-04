@@ -1,5 +1,4 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 
 import { User } from './entities/user.entity.js';
 import { UserRepository } from './repositories/user.repository.js';
@@ -10,7 +9,6 @@ export class UsersService {
   private readonly logger = new Logger(UsersService.name);
 
   constructor(
-    @InjectRepository(UserRepository)
     private readonly userRepository: UserRepository,
   ) {}
 
