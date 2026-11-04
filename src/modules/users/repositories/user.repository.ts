@@ -38,6 +38,24 @@ export class UserRepository {
   }
 
   /**
+   * Finds a user by email address, including the password hash.
+   *
+   * Used for authentication flows where the password hash is needed
+   * for verification. The `passwordHash` column has `select: false`
+   * by default, so this method explicitly selects it.
+   *
+   * @param email - User email address (unique).
+   * @returns The matching user with password hash, or null if not found.
+   */
+  async findByEmailWithPassword(email: string): Promise<User | null> {
+    return this.repository
+      .createQueryBuilder('user')
+      .addSelect('user.passwordHash')
+      .where('user.email = :email', { email })
+      .getOne();
+  }
+
+  /**
    * Creates and persists a new user.
    *
    * @param data - Partial user data to create (typically from registration or OAuth).

@@ -42,6 +42,7 @@ describe('UserRepository', () => {
             update: vi.fn(),
             softDelete: vi.fn(),
             delete: vi.fn(),
+            createQueryBuilder: vi.fn(),
           },
         },
       ],
@@ -88,6 +89,39 @@ describe('UserRepository', () => {
 
       expect(result).toBeNull();
       expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { email: 'nonexistent@example.com' } });
+    });
+  });
+
+  describe('findByEmailWithPassword', () => {
+    it('should find user by email including password hash', async () => {
+      const userWithPassword = { ...mockUser, passwordHash: 'hashed-password' };
+      const mockQueryBuilder = {
+        addSelect: vi.fn().mockReturnThis(),
+        where: vi.fn().mockReturnThis(),
+        getOne: vi.fn().mockResolvedValue(userWithPassword),
+      };
+      vi.mocked(mockRepository.createQueryBuilder).mockReturnValue(mockQueryBuilder as any);
+
+      const result = await repository.findByEmailWithPassword('test@example.com');
+
+      expect(result).toEqual(userWithPassword);
+      expect(mockRepository.createQueryBuilder).toHaveBeenCalledWith('user');
+      expect(mockQueryBuilder.addSelect).toHaveBeenCalledWith('user.passwordHash');
+      expect(mockQueryBuilder.where).toHaveBeenCalledWith('user.email = :email', { email: 'test@example.com' });
+      expect(mockQueryBuilder.getOne).toHaveBeenCalled();
+    });
+
+    it('should return null when user not found by email with password', async () => {
+      const mockQueryBuilder = {
+        addSelect: vi.fn().mockReturnThis(),
+        where: vi.fn().mockReturnThis(),
+        getOne: vi.fn().mockResolvedValue(null),
+      };
+      vi.mocked(mockRepository.createQueryBuilder).mockReturnValue(mockQueryBuilder as any);
+
+      const result = await repository.findByEmailWithPassword('nonexistent@example.com');
+
+      expect(result).toBeNull();
     });
   });
 
