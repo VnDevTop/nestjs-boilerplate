@@ -1,8 +1,8 @@
 import { ConflictException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import * as argon2 from 'argon2';
 
 import { UsersService } from '../users/users.service.js';
+import { PasswordService } from './password.service.js';
 import { AuthResult } from '../../common/interfaces/auth-result.interface.js';
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface.js';
 import { TokenPair } from '../../common/interfaces/token-pair.interface.js';
@@ -24,6 +24,7 @@ export class AuthService {
 
   constructor(
     private readonly usersService: UsersService,
+    private readonly passwordService: PasswordService,
     private readonly jwtService: JwtService,
   ) {}
 
@@ -42,7 +43,7 @@ export class AuthService {
       return null;
     }
 
-    const isPasswordValid = await argon2.verify(user.passwordHash, password);
+    const isPasswordValid = await this.passwordService.verify(user.passwordHash, password);
     if (!isPasswordValid) {
       return null;
     }
@@ -66,12 +67,7 @@ export class AuthService {
       throw new ConflictException('User with this email already exists');
     }
 
-    const passwordHash = await argon2.hash(password, {
-      type: argon2.argon2id,
-      memoryCost: 65536, // 64 MB
-      timeCost: 3,
-      parallelism: 4,
-    });
+    const passwordHash = await this.passwordService.hash(password);
 
     const user = await this.usersService.create({
       email,

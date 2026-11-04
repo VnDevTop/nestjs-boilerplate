@@ -5,6 +5,7 @@ import { PassportModule } from '@nestjs/passport';
 import { UsersModule } from '../users/users.module.js';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
+import { PasswordService } from './password.service.js';
 
 /**
  * Authentication module.
@@ -26,7 +27,7 @@ import { AuthService } from './auth.service.js';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService],
-  exports: [AuthService, JwtModule, PassportModule],
+  providers: [AuthService, PasswordService],
+  exports: [AuthService, PasswordService, JwtModule, PassportModule],
 })
 export class AuthModule {}
