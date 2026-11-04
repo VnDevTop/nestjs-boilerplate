@@ -29,6 +29,7 @@ import {
   validateEnv
 } from './config/index.js';
 import { HealthModule } from './modules/health/health.module.js';
+import { UsersModule } from './modules/users/users.module.js';
 
 export const {ObserveModule, ObserveInstrument} = createObserveModule();
 
@@ -81,6 +82,8 @@ export const {ObserveModule, ObserveInstrument} = createObserveModule();
     ThrottlerModule.forRootAsync(throttleConfig.asProvider()),
     // Health check endpoints: GET /health and GET /health/ready
     HealthModule,
+    // User management endpoints
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [
