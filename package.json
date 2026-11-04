@@ -99,6 +99,7 @@
     "@nestjs/testing": "^12.3.2",
     "@types/express": "^5.0.0",
     "@types/node": "^26.6.6",
+    "@types/passport-jwt": "^4.0.1",
     "@types/supertest": "^7.0.0",
     "@vitest/coverage-v8": "^5.0.5",
     "husky": "^9.1.7",

@@ -6,6 +6,8 @@ import { UsersModule } from '../users/users.module.js';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
 import { PasswordService } from './password.service.js';
+import { JwtStrategy } from './strategies/jwt.strategy.js';
+import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
 import { jwtConfig } from '../../config/jwt.config.js';
 
 /**
@@ -23,7 +25,7 @@ import { jwtConfig } from '../../config/jwt.config.js';
     JwtModule.registerAsync(jwtConfig.asProvider()),
   ],
   controllers: [AuthController],
-  providers: [AuthService, PasswordService],
-  exports: [AuthService, PasswordService, JwtModule, PassportModule],
+  providers: [AuthService, PasswordService, JwtStrategy, JwtAuthGuard],
+  exports: [AuthService, PasswordService, JwtStrategy, JwtAuthGuard, JwtModule, PassportModule],
 })
 export class AuthModule {}
