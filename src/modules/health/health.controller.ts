@@ -3,6 +3,8 @@ import {
   Get,
 } from '@nestjs/common';
 
+import { Public } from '../../common/decorators/public.decorator.js';
+
 import {
   HttpCode,
   HttpStatus,
@@ -13,6 +15,7 @@ import {
 } from '@nestjs/terminus';
 
 @Controller('health')
+@Public()
 export class HealthController {
   constructor(private readonly health: HealthCheckService) {}
 

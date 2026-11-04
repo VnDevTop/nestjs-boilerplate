@@ -46,6 +46,14 @@ export class User extends BaseEntity {
   email!: string;
 
   /**
+   * Hashed password for email/password authentication.
+   * Null for users who only authenticate via OIDC providers.
+   * Never store or return the plain-text password.
+   */
+  @Column({ type: 'varchar', length: 255, nullable: true, select: false })
+  passwordHash?: string | null;
+
+  /**
    * Whether the email address has been verified.
    * `true` if the user has verified their email address through the
    * identity provider or verification flow.

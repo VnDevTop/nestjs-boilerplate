@@ -28,6 +28,16 @@ export class UserRepository {
   }
 
   /**
+   * Finds a user by primary key ID.
+   *
+   * @param id - User primary key ID.
+   * @returns The matching user or null if not found.
+   */
+  async findById(id: string): Promise<User | null> {
+    return this.repository.findOne({ where: { id } });
+  }
+
+  /**
    * Finds a user by email address.
    *
    * @param email - User email address (unique).
@@ -35,6 +45,24 @@ export class UserRepository {
    */
   async findByEmail(email: string): Promise<User | null> {
     return this.repository.findOne({ where: { email } });
+  }
+
+  /**
+   * Finds a user by email address, including the password hash.
+   *
+   * Used for authentication flows where the password hash is needed
+   * for verification. The `passwordHash` column has `select: false`
+   * by default, so this method explicitly selects it.
+   *
+   * @param email - User email address (unique).
+   * @returns The matching user with password hash, or null if not found.
+   */
+  async findByEmailWithPassword(email: string): Promise<User | null> {
+    return this.repository
+      .createQueryBuilder('user')
+      .addSelect('user.passwordHash')
+      .where('user.email = :email', { email })
+      .getOne();
   }
 
   /**

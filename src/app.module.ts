@@ -20,6 +20,7 @@ import {
   corsConfig,
   databaseConfig,
   i18nConfig,
+  jwtConfig,
   mailConfig,
   observeConfig,
   queueConfig,
@@ -28,6 +29,8 @@ import {
   throttleConfig,
   validateEnv
 } from './config/index.js';
+import { AdminModule } from './modules/admin/admin.module.js';
+import { AuthModule } from './modules/auth/auth.module.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { UsersModule } from './modules/users/users.module.js';
 
@@ -37,7 +40,7 @@ export const {ObserveModule, ObserveInstrument} = createObserveModule();
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [appConfig, observeConfig, cacheConfig, corsConfig, databaseConfig, swaggerConfig, i18nConfig, queueConfig, retentionConfig, mailConfig, throttleConfig],
+      load: [appConfig, observeConfig, cacheConfig, corsConfig, databaseConfig, swaggerConfig, i18nConfig, jwtConfig, queueConfig, retentionConfig, mailConfig, throttleConfig],
       validate: validateEnv,
     }),
     // Distributed tracing, auto-correlated logs, request/job metrics, error
@@ -84,6 +87,10 @@ export const {ObserveModule, ObserveInstrument} = createObserveModule();
     HealthModule,
     // User management endpoints
     UsersModule,
+    // Authentication & authorization
+    AuthModule,
+    // Admin endpoints
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [
