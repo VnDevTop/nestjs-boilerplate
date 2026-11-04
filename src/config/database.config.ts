@@ -10,7 +10,7 @@ export const databaseConfig = registerAs<TypeOrmModuleOptions>(
     type: 'postgres',
     url: process.env.DATABASE_URL,
     autoLoadEntities: true,
-    synchronize: false,
+    synchronize: process.env.NODE_ENV === 'test',
     ssl:
       process.env.DB_SSL === 'true'
         ? {

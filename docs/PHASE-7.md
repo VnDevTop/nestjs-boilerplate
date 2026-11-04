@@ -33,6 +33,25 @@ sub-phases.
 4. `docs(types): document shared enum and type usage`
    - Added `docs/SHARED-TYPES.md`.
 
+### Phase 7.1 — Data model
+
+1. `feat(users): add user entity compliant with oidc claims`
+2. `feat(users): add user repository`
+
+### Phase 7.2 — Service & API
+
+3. `feat(users): add users service`
+4. `feat(users): add user profile endpoints`
+5. `feat(users): add role management`
+6. `feat(users): add data retention and cleanup hooks`
+
+### Phase 7.3 — Tests & docs
+
+7. `test(users): add user unit tests`
+8. `test(users): add user e2e tests`
+9. `docs(users): document oidc claim mapping`
+   - Added `docs/OIDC-CLAIM-MAPPING.md`.
+
 ## Validation
 
 ```bash
