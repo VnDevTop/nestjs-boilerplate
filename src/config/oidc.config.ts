@@ -40,6 +40,12 @@ export const oidcConfig = registerAs('oidc', () => {
       userInfoUrl: 'https://api.github.com/user',
       issuer: 'https://github.com',
     },
+    APPLE: {
+      authorizationUrl: 'https://appleid.apple.com/auth/authorize',
+      tokenUrl: 'https://appleid.apple.com/auth/token',
+      userInfoUrl: '',
+      issuer: 'https://appleid.apple.com',
+    },
   };
 
   for (const provider of Object.values(OidcProvider)) {
