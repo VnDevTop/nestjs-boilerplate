@@ -52,6 +52,12 @@ export const oidcConfig = registerAs('oidc', () => {
       userInfoUrl: 'https://graph.facebook.com/v18.0/me',
       issuer: 'https://www.facebook.com',
     },
+    X: {
+      authorizationUrl: 'https://twitter.com/i/oauth2/authorize',
+      tokenUrl: 'https://api.twitter.com/2/oauth2/token',
+      userInfoUrl: 'https://api.twitter.com/2/users/me',
+      issuer: 'https://twitter.com',
+    },
   };
 
   for (const provider of Object.values(OidcProvider)) {
