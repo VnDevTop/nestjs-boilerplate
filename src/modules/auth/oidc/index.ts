@@ -1,5 +1,6 @@
 export * from './apple-oidc.provider.js';
 export * from './base-oidc-provider.js';
+export * from './facebook-oidc.provider.js';
 export * from './github-oidc.provider.js';
 export * from './google-oidc.provider.js';
 export * from './microsoft-oidc.provider.js';

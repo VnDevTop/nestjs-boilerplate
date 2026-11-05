@@ -46,6 +46,12 @@ export const oidcConfig = registerAs('oidc', () => {
       userInfoUrl: '',
       issuer: 'https://appleid.apple.com',
     },
+    FACEBOOK: {
+      authorizationUrl: 'https://www.facebook.com/v18.0/dialog/oauth',
+      tokenUrl: 'https://graph.facebook.com/v18.0/oauth/access_token',
+      userInfoUrl: 'https://graph.facebook.com/v18.0/me',
+      issuer: 'https://www.facebook.com',
+    },
   };
 
   for (const provider of Object.values(OidcProvider)) {
