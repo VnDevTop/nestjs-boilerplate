@@ -244,29 +244,7 @@ export class AuthService {
     }
 
     if (mfaToken) {
-      const payload = await this.jwtService.verifyAsync(mfaToken, { secret: jwtConfig().secret });
-      if (payload.type !== 'mfa') {
-        throw new UnauthorizedException('Invalid MFA token');
-      }
-
-      const secret = user.totpSecret;
-      if (!secret) {
-        return { enabled: false };
-      }
-
-      const valid = await this.totpService.verifyTotp(code, secret);
-      if (!valid) {
-        return { enabled: false };
-      }
-
-      const tokens = await this.issueTokens({
-        sub: user.id,
-        email: user.email,
-        roles: user.roles as any,
-        mfaVerified: true,
-      });
-
-      return { enabled: true, tokens };
+      return this.verifyMfaWithToken(mfaToken, code);
     }
 
     const secret = user.totpSecret;
@@ -286,6 +264,45 @@ export class AuthService {
     });
 
     return { enabled: true };
+  }
+
+  /**
+   * Verifies the MFA challenge token issued during login and exchanges it
+   * for a fully authenticated token pair.
+   *
+   * @param mfaToken - Pending MFA challenge token issued at login.
+   * @param code - The user submitted TOTP code.
+   * @returns MFA status and, when verified, the issued token pair.
+   */
+  async verifyMfaWithToken(mfaToken: string, code: string): Promise<{ enabled: boolean; tokens?: TokenPair }> {
+    const payload = await this.jwtService.verifyAsync(mfaToken, { secret: jwtConfig().secret });
+    if (payload.type !== 'mfa') {
+      throw new UnauthorizedException('Invalid MFA token');
+    }
+
+    const user = await this.usersService.findByIdWithTotp(payload.sub);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const secret = user.totpSecret;
+    if (!secret) {
+      return { enabled: false };
+    }
+
+    const valid = await this.totpService.verifyTotp(code, secret);
+    if (!valid) {
+      return { enabled: false };
+    }
+
+    const tokens = await this.issueTokens({
+      sub: user.id,
+      email: user.email,
+      roles: user.roles as any,
+      mfaVerified: true,
+    });
+
+    return { enabled: true, tokens };
   }
 
   /**

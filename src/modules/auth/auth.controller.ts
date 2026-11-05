@@ -77,6 +77,19 @@ export class AuthController {
   }
 
   /**
+   * Verifies the MFA challenge token issued during login and exchanges it
+   * for a fully authenticated token pair.
+   */
+  @Public()
+  @Post('mfa/verify-login')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Verify TOTP challenge from login and issue tokens' })
+  @ApiResponse({ status: 200, description: 'MFA verified; tokens issued' })
+  async verifyLoginMfa(@Body() body: { code: string; mfaToken: string }) {
+    return this.authService.verifyMfaWithToken(body.mfaToken, body.code);
+  }
+
+  /**
    * Disables two-factor authentication after verifying a TOTP code.
    */
   @Post('mfa/disable')
