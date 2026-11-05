@@ -13,7 +13,9 @@ import { JwtStrategy } from './strategies/jwt.strategy.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
 import { AuthGuard } from './guards/auth.guard.js';
 import { GlobalAuthGuard } from './guards/global-auth.guard.js';
+import { OidcController } from './oidc/oidc.controller.js';
 import { OidcProviderRegistry } from './oidc/oidc-provider-registry.js';
+import { OidcService } from './oidc/oidc.service.js';
 import { jwtConfig } from '../../config/jwt.config.js';
 
 /**
@@ -30,7 +32,7 @@ import { jwtConfig } from '../../config/jwt.config.js';
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync(jwtConfig.asProvider()),
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, OidcController],
   providers: [
     AuthService,
     PasswordService,
@@ -40,11 +42,12 @@ import { jwtConfig } from '../../config/jwt.config.js';
     PermissionsGuard,
     RolesGuard,
     OidcProviderRegistry,
+    OidcService,
     {
       provide: APP_GUARD,
       useClass: GlobalAuthGuard,
     },
   ],
-  exports: [AuthService, PasswordService, JwtStrategy, JwtAuthGuard, AuthGuard, PermissionsGuard, RolesGuard, OidcProviderRegistry, JwtModule, PassportModule],
+  exports: [AuthService, PasswordService, JwtStrategy, JwtAuthGuard, AuthGuard, PermissionsGuard, RolesGuard, OidcProviderRegistry, OidcService, JwtModule, PassportModule],
 })
 export class AuthModule {}
