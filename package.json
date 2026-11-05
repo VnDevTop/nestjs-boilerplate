@@ -1,6 +1,6 @@
 {
   "name": "nestjs-boilerplate",
-  "version": "12.6.2",
+  "version": "12.8.2",
   "description": "Production-ready NestJS boilerplate with modular architecture, authentication, and modern tooling.",
   "author": "VnDevTop",
   "contributors": [],
@@ -40,6 +40,7 @@
   "scripts": {
     "build": "nest build",
     "deploy": "nest deploy",
+    "seed": "node dist/scripts/seed-admin.js",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start --env-file .env",
     "start:dev": "nest start --watch --env-file .env",

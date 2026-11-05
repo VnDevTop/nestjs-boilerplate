@@ -181,6 +181,246 @@ declare global {
        */
       THROTTLE_BLOCK_DURATION?: number;
       /**
+       * Google OAuth2 client ID for OIDC sign-in.
+       * Optional: when both client ID and secret are set, the Google provider is enabled.
+       */
+      OIDC_GOOGLE_CLIENT_ID?: string;
+      /**
+       * Google OAuth2 client secret for OIDC sign-in.
+       * Optional: when both client ID and secret are set, the Google provider is enabled.
+       */
+      OIDC_GOOGLE_CLIENT_SECRET?: string;
+      /**
+       * Google OAuth2 callback URL for OIDC sign-in.
+       * Optional: custom callback URL. Defaults to localhost callback when not set.
+       */
+      OIDC_GOOGLE_CALLBACK_URL?: string;
+      /**
+       * Google OAuth2 scopes for OIDC sign-in.
+       * Optional: comma-separated list of scopes. Defaults to 'openid,profile,email' when not set.
+       */
+      OIDC_GOOGLE_SCOPES?: string;
+      /**
+       * Google OAuth2 authorization URL for OIDC sign-in.
+       * Optional: custom authorization endpoint. Defaults to Google's endpoint when not set.
+       */
+      OIDC_GOOGLE_AUTHORIZATION_URL?: string;
+      /**
+       * Google OAuth2 token URL for OIDC sign-in.
+       * Optional: custom token endpoint. Defaults to Google's endpoint when not set.
+       */
+      OIDC_GOOGLE_TOKEN_URL?: string;
+      /**
+       * Google OAuth2 user info URL for OIDC sign-in.
+       * Optional: custom user info endpoint. Defaults to Google's endpoint when not set.
+       */
+      OIDC_GOOGLE_USER_INFO_URL?: string;
+      /**
+       * Google OIDC issuer for OIDC sign-in.
+       * Optional: custom issuer. Defaults to Google's issuer when not set.
+       */
+      OIDC_GOOGLE_ISSUER?: string;
+      /**
+       * Microsoft OAuth2 client ID for OIDC sign-in.
+       * Optional: when both client ID and secret are set, the Microsoft provider is enabled.
+       */
+      OIDC_MICROSOFT_CLIENT_ID?: string;
+      /**
+       * Microsoft OAuth2 client secret for OIDC sign-in.
+       * Optional: when both client ID and secret are set, the Microsoft provider is enabled.
+       */
+      OIDC_MICROSOFT_CLIENT_SECRET?: string;
+      /**
+       * Microsoft OAuth2 callback URL for OIDC sign-in.
+       * Optional: custom callback URL. Defaults to localhost callback when not set.
+       */
+      OIDC_MICROSOFT_CALLBACK_URL?: string;
+      /**
+       * Microsoft OAuth2 scopes for OIDC sign-in.
+       * Optional: comma-separated list of scopes. Defaults to 'openid,profile,email' when not set.
+       */
+      OIDC_MICROSOFT_SCOPES?: string;
+      /**
+       * Microsoft OAuth2 authorization URL for OIDC sign-in.
+       * Optional: custom authorization endpoint. Defaults to Microsoft's endpoint when not set.
+       */
+      OIDC_MICROSOFT_AUTHORIZATION_URL?: string;
+      /**
+       * Microsoft OAuth2 token URL for OIDC sign-in.
+       * Optional: custom token endpoint. Defaults to Microsoft's endpoint when not set.
+       */
+      OIDC_MICROSOFT_TOKEN_URL?: string;
+      /**
+       * Microsoft OAuth2 user info URL for OIDC sign-in.
+       * Optional: custom user info endpoint. Defaults to Microsoft's endpoint when not set.
+       */
+      OIDC_MICROSOFT_USER_INFO_URL?: string;
+      /**
+       * Microsoft OIDC issuer for OIDC sign-in.
+       * Optional: custom issuer. Defaults to Microsoft's issuer when not set.
+       */
+      OIDC_MICROSOFT_ISSUER?: string;
+      /**
+       * GitHub OAuth app client ID for OIDC sign-in.
+       * Optional: when both client ID and secret are set, the GitHub provider is enabled.
+       */
+      OIDC_GITHUB_CLIENT_ID?: string;
+      /**
+       * GitHub OAuth app client secret for OIDC sign-in.
+       * Optional: when both client ID and secret are set, the GitHub provider is enabled.
+       */
+      OIDC_GITHUB_CLIENT_SECRET?: string;
+      /**
+       * GitHub OAuth app callback URL for OIDC sign-in.
+       * Optional: custom callback URL. Defaults to localhost callback when not set.
+       */
+      OIDC_GITHUB_CALLBACK_URL?: string;
+      /**
+       * GitHub OAuth app scopes for OIDC sign-in.
+       * Optional: comma-separated list of scopes. Defaults to 'read:user,user:email' when not set.
+       */
+      OIDC_GITHUB_SCOPES?: string;
+      /**
+       * GitHub OAuth app authorization URL for OIDC sign-in.
+       * Optional: custom authorization endpoint. Defaults to GitHub's endpoint when not set.
+       */
+      OIDC_GITHUB_AUTHORIZATION_URL?: string;
+      /**
+       * GitHub OAuth app token URL for OIDC sign-in.
+       * Optional: custom token endpoint. Defaults to GitHub's endpoint when not set.
+       */
+      OIDC_GITHUB_TOKEN_URL?: string;
+      /**
+       * GitHub OAuth app user info URL for OIDC sign-in.
+       * Optional: custom user info endpoint. Defaults to GitHub's endpoint when not set.
+       */
+      OIDC_GITHUB_USER_INFO_URL?: string;
+      /**
+       * GitHub OIDC issuer for OIDC sign-in.
+       * Optional: custom issuer. Defaults to GitHub's issuer when not set.
+       */
+      OIDC_GITHUB_ISSUER?: string;
+      /**
+       * Apple OAuth2 client ID for OIDC sign-in.
+       * Optional: when both client ID and secret are set, the Apple provider is enabled.
+       */
+      OIDC_APPLE_CLIENT_ID?: string;
+      /**
+       * Apple OAuth2 client secret for OIDC sign-in.
+       * Optional: when both client ID and secret are set, the Apple provider is enabled.
+       */
+      OIDC_APPLE_CLIENT_SECRET?: string;
+      /**
+       * Apple OAuth2 callback URL for OIDC sign-in.
+       * Optional: custom callback URL. Defaults to localhost callback when not set.
+       */
+      OIDC_APPLE_CALLBACK_URL?: string;
+      /**
+       * Apple OAuth2 scopes for OIDC sign-in.
+       * Optional: comma-separated list of scopes. Defaults to 'openid,profile,email' when not set.
+       */
+      OIDC_APPLE_SCOPES?: string;
+      /**
+       * Apple OAuth2 authorization URL for OIDC sign-in.
+       * Optional: custom authorization endpoint. Defaults to Apple's endpoint when not set.
+       */
+      OIDC_APPLE_AUTHORIZATION_URL?: string;
+      /**
+       * Apple OAuth2 token URL for OIDC sign-in.
+       * Optional: custom token endpoint. Defaults to Apple's endpoint when not set.
+       */
+      OIDC_APPLE_TOKEN_URL?: string;
+      /**
+       * Apple OAuth2 user info URL for OIDC sign-in.
+       * Optional: custom user info endpoint. Defaults to Apple's endpoint when not set.
+       */
+      OIDC_APPLE_USER_INFO_URL?: string;
+      /**
+       * Apple OIDC issuer for OIDC sign-in.
+       * Optional: custom issuer. Defaults to Apple's issuer when not set.
+       */
+      OIDC_APPLE_ISSUER?: string;
+      /**
+       * Facebook OAuth2 client ID for OIDC sign-in.
+       * Optional: when both client ID and secret are set, the Facebook provider is enabled.
+       */
+      OIDC_FACEBOOK_CLIENT_ID?: string;
+      /**
+       * Facebook OAuth2 client secret for OIDC sign-in.
+       * Optional: when both client ID and secret are set, the Facebook provider is enabled.
+       */
+      OIDC_FACEBOOK_CLIENT_SECRET?: string;
+      /**
+       * Facebook OAuth2 callback URL for OIDC sign-in.
+       * Optional: custom callback URL. Defaults to localhost callback when not set.
+       */
+      OIDC_FACEBOOK_CALLBACK_URL?: string;
+      /**
+       * Facebook OAuth2 scopes for OIDC sign-in.
+       * Optional: comma-separated list of scopes. Defaults to Facebook's endpoint when not set.
+       */
+      OIDC_FACEBOOK_SCOPES?: string;
+      /**
+       * Facebook OAuth2 authorization URL for OIDC sign-in.
+       * Optional: custom authorization endpoint. Defaults to Facebook's endpoint when not set.
+       */
+      OIDC_FACEBOOK_AUTHORIZATION_URL?: string;
+      /**
+       * Facebook OAuth2 token URL for OIDC sign-in.
+       * Optional: custom token endpoint. Defaults to Facebook's endpoint when not set.
+       */
+      OIDC_FACEBOOK_TOKEN_URL?: string;
+      /**
+       * Facebook OAuth2 user info URL for OIDC sign-in.
+       * Optional: custom user info endpoint. Defaults to Facebook's endpoint when not set.
+       */
+      OIDC_FACEBOOK_USER_INFO_URL?: string;
+      /**
+       * Facebook OIDC issuer for OIDC sign-in.
+       * Optional: custom issuer. Defaults to Facebook's issuer when not set.
+       */
+      OIDC_FACEBOOK_ISSUER?: string;
+      /**
+       * X OAuth2 client ID for OIDC sign-in.
+       * Optional: when both client ID and secret are set, the X provider is enabled.
+       */
+      OIDC_X_CLIENT_ID?: string;
+      /**
+       * X OAuth2 client secret for OIDC sign-in.
+       * Optional: when both client ID and secret are set, the X provider is enabled.
+       */
+      OIDC_X_CLIENT_SECRET?: string;
+      /**
+       * X OAuth2 callback URL for OIDC sign-in.
+       * Optional: custom callback URL. Defaults to localhost callback when not set.
+       */
+      OIDC_X_CALLBACK_URL?: string;
+      /**
+       * X OAuth2 scopes for OIDC sign-in.
+       * Optional: comma-separated list of scopes. Defaults to X's endpoint when not set.
+       */
+      OIDC_X_SCOPES?: string;
+      /**
+       * X OAuth2 authorization URL for OIDC sign-in.
+       * Optional: custom authorization endpoint. Defaults to X's endpoint when not set.
+       */
+      OIDC_X_AUTHORIZATION_URL?: string;
+      /**
+       * X OAuth2 token URL for OIDC sign-in.
+       * Optional: custom token endpoint. Defaults to X's endpoint when not set.
+       */
+      OIDC_X_TOKEN_URL?: string;
+      /**
+       * X OAuth2 user info URL for OIDC sign-in.
+       * Optional: custom user info endpoint. Defaults to X's endpoint when not set.
+       */
+      OIDC_X_USER_INFO_URL?: string;
+      /**
+       * X OIDC issuer for OIDC sign-in.
+       * Optional: custom issuer. Defaults to X's issuer when not set.
+       */
+      OIDC_X_ISSUER?: string;
+      /**
        * Key for NestJS Observe tracing/metrics.
        * Optional: obtained from Observe dashboard.
        */

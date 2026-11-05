@@ -34,6 +34,20 @@ export class UsersService {
   }
 
   /**
+   * Finds a user by subject identifier (OIDC `sub` claim).
+   *
+   * The OIDC subject is an opaque provider-specific identifier (often a
+   * numeric string) and is not the user UUID, so it must be looked up on the
+   * `sub` column rather than the primary key column.
+   *
+   * @param sub - Subject identifier from the identity provider.
+   * @returns The matching user or null.
+   */
+  async findBySub(sub: string): Promise<User | null> {
+    return this.userRepository.findBySub(sub);
+  }
+
+  /**
    * Finds a user by email.
    *
    * @param email - User email.

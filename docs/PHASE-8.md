@@ -11,6 +11,10 @@ registration and login, Argon2id password hashing, JWT access/refresh tokens,
 Passport JWT strategy and guards, role-based access control, permission-based
 authorization, admin module foundation, and global guard activation.
 
+Additionally implemented OIDC (OpenID Connect) provider support for 6 providers
+(Google, Microsoft, GitHub, Apple, Facebook, X/Twitter) with a provider
+abstraction layer, registry for multi-provider support, and setup documentation.
+
 ## Tasks completed
 
 ### Phase 8.1 — Basic JWT auth
@@ -73,6 +77,74 @@ authorization, admin module foundation, and global guard activation.
    - Registered `GlobalAuthGuard` as `APP_GUARD` in `AuthModule`.
    - Marked public routes: auth endpoints, health checks, root endpoint.
 
+### Phase 8.2 — OIDC providers
+
+1. `feat(auth): add oidc provider abstraction`
+   - Created `src/modules/auth/oidc/oidc-provider-config.interface.ts` (`OidcProviderConfig`).
+   - Created `src/modules/auth/oidc/oidc-provider.interface.ts` (`IOidcProvider`).
+   - Created `src/modules/auth/oidc/base-oidc-provider.ts` (`BaseOidcProvider`).
+   - Created `src/modules/auth/oidc/oidc-provider-registry.ts` (`OidcProviderRegistry`).
+   - Created `src/config/oidc.config.ts` (`oidcConfig`) with env-driven provider registration.
+   - Loaded `oidcConfig` in `AppModule`.
+
+2. `feat(auth): implement google oidc provider`
+   - Created `src/modules/auth/oidc/google-oidc.provider.ts` (`GoogleOidcProvider`).
+   - Endpoints: accounts.google.com, oauth2.googleapis.com, googleapis.com/oauth2/v3/userinfo.
+
+3. `feat(auth): implement microsoft oidc provider`
+   - Created `src/modules/auth/oidc/microsoft-oidc.provider.ts` (`MicrosoftOidcProvider`).
+   - Endpoints: login.microsoftonline.com, graph.microsoft.com.
+   - Multi-tenant support via `/common/` endpoint.
+
+4. `feat(auth): implement github oidc provider`
+   - Created `src/modules/auth/oidc/github-oidc.provider.ts` (`GithubOidcProvider`).
+   - Endpoints: github.com, api.github.com.
+   - Fetches emails from separate endpoint when private.
+
+5. `feat(auth): implement apple oidc provider`
+   - Created `src/modules/auth/oidc/apple-oidc.provider.ts` (`AppleOidcProvider`).
+   - Endpoints: appleid.apple.com.
+   - Decodes ID token for user profile (no userinfo endpoint).
+
+6. `feat(auth): implement facebook oidc provider`
+   - Created `src/modules/auth/oidc/facebook-oidc.provider.ts` (`FacebookOidcProvider`).
+   - Endpoints: facebook.com, graph.facebook.com.
+   - Requires `fields` parameter for profile data.
+
+7. `feat(auth): implement x (twitter) oidc provider`
+   - Created `src/modules/auth/oidc/x-oidc.provider.ts` (`XOidcProvider`).
+   - Endpoints: twitter.com, api.twitter.com.
+   - PKCE support, X API v2 response format.
+
+8. `feat(auth): add provider registration and config`
+   - Created `src/modules/auth/oidc/oidc.service.ts` (`OidcService`) — provider registration, callback handling, user find-or-create.
+   - Created `src/modules/auth/oidc/oidc.controller.ts` (`OidcController`) — public OIDC endpoints.
+   - Registered `OidcController` and `OidcService` in `AuthModule`.
+
+9. `docs(auth): add oidc provider setup guide`
+   - Created `docs/OIDC-PROVIDER-SETUP.md` with step-by-step setup for all 6 providers.
+
+### Phase 8.3 — E2E tests, OIDC subject lookup & seed data
+
+1. `fix(auth): prefix oidc sub with provider identifier for traceability`
+   - Prefixed OIDC `sub` claim with the provider identifier (e.g. `google-oauth2|1234567890`).
+   - Keeps subject identifiers traceable across providers.
+
+2. `fix(auth): look up oidc user by sub identifier instead of uuid`
+   - OIDC user lookups now use the subject identifier (`sub`) instead of the internal user UUID.
+
+3. `test(auth): add e2e tests for oidc google and github`
+
+4. `test(auth): add mocked oidc callback e2e`
+
+5. `test(users): add subject identifier lookup tests for full coverage`
+
+6. `test(e2e): add health and admin e2e coverage with seed data script`
+   - Added `test/health.e2e-spec.ts` (`GET /health`, `GET /health/ready`).
+   - Added `test/admin.e2e-spec.ts` (admin auth/RBAC flows: list, get, deactivate, change roles).
+   - Added `test/helpers/seed.ts` and `src/scripts/seed-admin.ts` (admin user seed).
+   - Added `.github/workflows/test.yml` (pull request → `master`: build → seed → unit/e2e tests).
+
 ## Validation
 
 ```bash
@@ -81,6 +153,7 @@ npx tsc --noEmit
 npm run build
 npm test
 npm run test:e2e
+npm run seed
 ```
 
 ## Docs deliverable
