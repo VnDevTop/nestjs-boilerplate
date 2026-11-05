@@ -15,6 +15,7 @@ describe('AuthService', () => {
   let usersService: UsersService;
   let passwordService: PasswordService;
   let jwtService: JwtService;
+  let totpService: TotpService;
 
   const mockUser: User = {
     id: 'user-1',
@@ -45,6 +46,8 @@ describe('AuthService', () => {
             findByEmail: vi.fn(),
             findByEmailWithPassword: vi.fn(),
             findById: vi.fn(),
+            findByIdWithTotp: vi.fn(),
+            updateProfile: vi.fn(),
             create: vi.fn(),
           },
         },
@@ -79,6 +82,7 @@ describe('AuthService', () => {
     usersService = module.get<UsersService>(UsersService);
     passwordService = module.get<PasswordService>(PasswordService);
     jwtService = module.get<JwtService>(JwtService);
+    totpService = module.get<TotpService>(TotpService);
   });
 
   describe('register', () => {
@@ -185,6 +189,20 @@ describe('AuthService', () => {
       vi.mocked(usersService.findByEmail).mockResolvedValue(null);
 
       await expect(service.login('test@example.com', 'password123')).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should return mfaRequired and mfaToken when user has totp enabled', async () => {
+      vi.mocked(usersService.findByEmailWithPassword).mockResolvedValue(mockUser);
+      vi.mocked(passwordService.verify).mockResolvedValue(true);
+      vi.mocked(usersService.findByEmail).mockResolvedValue({ ...mockUser, totpEnabled: true });
+      vi.mocked(jwtService.signAsync).mockResolvedValue('mfa-token');
+
+      const result = await service.login('test@example.com', 'password123');
+
+      expect(result.mfaRequired).toBe(true);
+      expect(result.mfaToken).toBe('mfa-token');
+      expect(result.tokens).toBeUndefined();
+      expect(jwtService.signAsync).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -296,6 +314,51 @@ describe('AuthService', () => {
 
       expect(result).toEqual(payload);
       expect(jwtService.verifyAsync).toHaveBeenCalledWith('valid-token');
+    });
+  });
+
+  describe('verifyMfa', () => {
+    it('should enable mfa when totp code is valid (setup flow)', async () => {
+      vi.mocked(usersService.findByIdWithTotp).mockResolvedValue({ ...mockUser, totpSecret: 'JBSWY3DPEHPK3PXP' });
+      vi.mocked(totpService.verifyTotp).mockResolvedValue(true);
+
+      const result = await service.verifyMfa('user-1', 'test@example.com', '123456');
+
+      expect(result.enabled).toBe(true);
+      expect(usersService.updateProfile).toHaveBeenCalledWith('user-1', expect.objectContaining({ totpEnabled: true }));
+    });
+
+    it('should return enabled false when totp secret is missing', async () => {
+      vi.mocked(usersService.findByIdWithTotp).mockResolvedValue({ ...mockUser, totpSecret: null });
+
+      const result = await service.verifyMfa('user-1', 'test@example.com', '123456');
+
+      expect(result.enabled).toBe(false);
+    });
+
+    it('should return tokens when mfa token and valid code verify', async () => {
+      vi.mocked(jwtService.verifyAsync).mockResolvedValue({ sub: 'user-1', type: 'mfa' });
+      vi.mocked(usersService.findByIdWithTotp).mockResolvedValue({ ...mockUser, totpSecret: 'JBSWY3DPEHPK3PXP' });
+      vi.mocked(totpService.verifyTotp).mockResolvedValue(true);
+      vi.mocked(jwtService.signAsync)
+        .mockResolvedValueOnce('access-token')
+        .mockResolvedValueOnce('refresh-token');
+
+      const result = await service.verifyMfa('user-1', 'test@example.com', '123456', 'mfa-token');
+
+      expect(result.enabled).toBe(true);
+      expect(result.tokens?.accessToken).toBe('access-token');
+      expect(result.tokens?.refreshToken).toBe('refresh-token');
+    });
+
+    it('should return enabled false when mfa token code is invalid', async () => {
+      vi.mocked(jwtService.verifyAsync).mockResolvedValue({ sub: 'user-1', type: 'mfa' });
+      vi.mocked(usersService.findByIdWithTotp).mockResolvedValue({ ...mockUser, totpSecret: 'JBSWY3DPEHPK3PXP' });
+      vi.mocked(totpService.verifyTotp).mockResolvedValue(false);
+
+      const result = await service.verifyMfa('user-1', 'test@example.com', '000000', 'mfa-token');
+
+      expect(result.enabled).toBe(false);
     });
   });
 });
