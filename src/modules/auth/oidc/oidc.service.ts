@@ -198,7 +198,7 @@ export class OidcService {
    */
   private async findOrCreateUser(claims: OidcClaims, providerName: string): Promise<any> {
     // Try to find by sub (OIDC subject)
-    let user = await this.usersService.findById(claims.sub);
+    let user = await this.usersService.findBySub(claims.sub);
 
     if (!user) {
       // Try to find by email

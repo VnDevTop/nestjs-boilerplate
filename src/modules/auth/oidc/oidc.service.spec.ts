@@ -79,6 +79,7 @@ describe('OidcService', () => {
           provide: UsersService,
           useValue: {
             findById: vi.fn(),
+            findBySub: vi.fn(),
             findByEmail: vi.fn(),
             create: vi.fn(),
             updateProfile: vi.fn(),
@@ -164,7 +165,7 @@ describe('OidcService', () => {
       };
 
       vi.mocked(mockProvider.handleCallback).mockResolvedValue(claims);
-      vi.mocked(usersService.findById).mockResolvedValue(mockUser as any);
+      vi.mocked(usersService.findBySub).mockResolvedValue(mockUser as any);
       vi.mocked(usersService.updateProfile).mockResolvedValue(mockUser as any);
 
       const result = await service.handleCallback('google', 'auth-code', 'valid-state');
@@ -183,7 +184,7 @@ describe('OidcService', () => {
       };
 
       vi.mocked(mockProvider.handleCallback).mockResolvedValue(claims);
-      vi.mocked(usersService.findById).mockResolvedValue(null);
+      vi.mocked(usersService.findBySub).mockResolvedValue(null);
       vi.mocked(usersService.findByEmail).mockResolvedValue(null);
       vi.mocked(usersService.create).mockResolvedValue({
         ...mockUser,
@@ -215,7 +216,7 @@ describe('OidcService', () => {
       };
 
       vi.mocked(mockProvider.handleCallback).mockResolvedValue(claims);
-      vi.mocked(usersService.findById).mockResolvedValue(null);
+      vi.mocked(usersService.findBySub).mockResolvedValue(null);
       vi.mocked(usersService.findByEmail).mockResolvedValue(mockUser as any);
       vi.mocked(usersService.updateProfile).mockResolvedValue(mockUser as any);
 
@@ -239,7 +240,7 @@ describe('OidcService', () => {
       service.getAuthorizationUrl('google', 'consumed-state');
 
       vi.mocked(mockProvider.handleCallback).mockResolvedValue({ sub: 'google-sub-123' } as OidcClaims);
-      vi.mocked(usersService.findById).mockResolvedValue(mockUser as any);
+      vi.mocked(usersService.findBySub).mockResolvedValue(mockUser as any);
       vi.mocked(usersService.updateProfile).mockResolvedValue(mockUser as any);
 
       await service.handleCallback('google', 'auth-code', 'consumed-state');
