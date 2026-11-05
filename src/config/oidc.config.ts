@@ -34,6 +34,12 @@ export const oidcConfig = registerAs('oidc', () => {
       userInfoUrl: 'https://graph.microsoft.com/v1.0/me',
       issuer: 'https://login.microsoftonline.com/common/v2.0',
     },
+    GITHUB: {
+      authorizationUrl: 'https://github.com/login/oauth/authorize',
+      tokenUrl: 'https://github.com/login/oauth/access_token',
+      userInfoUrl: 'https://api.github.com/user',
+      issuer: 'https://github.com',
+    },
   };
 
   for (const provider of Object.values(OidcProvider)) {
