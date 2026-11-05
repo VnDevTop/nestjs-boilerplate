@@ -1,32 +1,28 @@
 name: Test
 
 on:
-  push:
-    branches: [master]
   pull_request:
     branches: [master]
 
 jobs:
-  test:
-    name: Unit and e2e tests
+  e2e:
+    name: E2E Tests
     runs-on: ubuntu-latest
-    environment: test
 
     services:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_USER: test
-          POSTGRES_PASSWORD: test
-          POSTGRES_DB: test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: nestjs_boilerplate
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U test -d test"
+          --health-cmd "pg_isready -U postgres"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-
       redis:
         image: redis:7
         ports:
@@ -38,9 +34,15 @@ jobs:
           --health-retries 5
 
     env:
-      DATABASE_URL: postgres://test:test@localhost:5432/test
-      REDIS_URL: redis://localhost:6379
       NODE_ENV: test
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nestjs_boilerplate
+      REDIS_URL: redis://localhost:6379
+      JWT_SECRET: e2e-jwt-secret
+      JWT_REFRESH_SECRET: e2e-jwt-refresh-secret
+      THROTTLE_TTL: 60
+      THROTTLE_LIMIT: 100
+      SEED_ADMIN_EMAIL: admin@example.com
+      SEED_ADMIN_PASSWORD: admin123
       OIDC_GOOGLE_CLIENT_ID: ${{ secrets.OIDC_GOOGLE_CLIENT_ID }}
       OIDC_GOOGLE_CLIENT_SECRET: ${{ secrets.OIDC_GOOGLE_CLIENT_SECRET }}
       OIDC_GITHUB_CLIENT_ID: ${{ secrets.OIDC_GITHUB_CLIENT_ID }}
@@ -58,6 +60,12 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Seed database
+        run: npm run seed
 
       - name: Unit tests
         run: npm test

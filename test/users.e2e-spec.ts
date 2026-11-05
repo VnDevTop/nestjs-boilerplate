@@ -27,6 +27,25 @@ describe('UsersController (e2e)', () => {
 
       expect(res.status).toBe(401);
     });
+
+    it('should return the user profile with a valid token', async () => {
+      const email = `e2e-user-by-id-${Date.now()}@example.com`;
+
+      const registerRes = await request(app.getHttpServer())
+        .post('/auth/register')
+        .send({ email, password: 'password123', name: 'E2E User' });
+
+      const accessToken = registerRes.body.tokens.accessToken;
+      const userId = registerRes.body.user.sub;
+
+      const res = await request(app.getHttpServer())
+        .get(`/users/${userId}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty('email');
+      expect(res.body.email).toBe(email);
+    });
   });
 
   describe('GET /users/me', () => {
@@ -35,6 +54,24 @@ describe('UsersController (e2e)', () => {
         .get('/users/me');
 
       expect(res.status).toBe(401);
+    });
+
+    it('should return the current user profile with a valid token', async () => {
+      const email = `e2e-me-${Date.now()}@example.com`;
+
+      const registerRes = await request(app.getHttpServer())
+        .post('/auth/register')
+        .send({ email, password: 'password123', name: 'E2E User' });
+
+      const accessToken = registerRes.body.tokens.accessToken;
+
+      const res = await request(app.getHttpServer())
+        .get('/users/me')
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty('email');
+      expect(res.body.email).toBe(email);
     });
   });
 
@@ -45,6 +82,25 @@ describe('UsersController (e2e)', () => {
         .send({ name: 'Updated Name' });
 
       expect(res.status).toBe(401);
+    });
+
+    it('should update the current user profile with a valid token', async () => {
+      const email = `e2e-update-me-${Date.now()}@example.com`;
+
+      const registerRes = await request(app.getHttpServer())
+        .post('/auth/register')
+        .send({ email, password: 'password123', name: 'E2E User' });
+
+      const accessToken = registerRes.body.tokens.accessToken;
+
+      const res = await request(app.getHttpServer())
+        .patch('/users/me')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ name: 'Updated Name' });
+
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty('name');
+      expect(res.body.name).toBe('Updated Name');
     });
   });
 });
