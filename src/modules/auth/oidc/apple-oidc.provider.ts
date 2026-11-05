@@ -37,10 +37,10 @@ export class AppleOidcProvider extends BaseOidcProvider implements IOidcProvider
     super({
       ...config,
       name: OidcProvider.APPLE,
-      authorizationUrl: config.authorizationUrl || APPLE_AUTHORIZATION_URL,
-      tokenUrl: config.tokenUrl || APPLE_TOKEN_URL,
-      userInfoUrl: config.userInfoUrl || '', // Apple has no userinfo endpoint
-      issuer: config.issuer || APPLE_ISSUER,
+      authorizationUrl: config.authorizationUrl ?? APPLE_AUTHORIZATION_URL,
+      tokenUrl: config.tokenUrl ?? APPLE_TOKEN_URL,
+      userInfoUrl: config.userInfoUrl ?? '', // Apple has no userinfo endpoint
+      issuer: config.issuer ?? APPLE_ISSUER,
       scopes: config.scopes?.length ? config.scopes : ['openid', 'name', 'email'],
     });
   }

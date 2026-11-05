@@ -38,7 +38,7 @@ export abstract class BaseOidcProvider implements IOidcProvider {
    * @returns The full authorization URL.
    */
   getAuthorizationUrl(state: string, redirectUri?: string): string {
-    const url = new URL(this.providerConfig.authorizationUrl);
+    const url = new URL(this.providerConfig.authorizationUrl!);
     url.searchParams.set('client_id', this.providerConfig.clientId);
     url.searchParams.set('redirect_uri', redirectUri ?? this.providerConfig.callbackUrl);
     url.searchParams.set('response_type', 'code');
@@ -73,7 +73,7 @@ export abstract class BaseOidcProvider implements IOidcProvider {
    * @returns OIDC claims for the user.
    */
   async getUserProfile(accessToken: string): Promise<OidcClaims> {
-    const response = await fetch(this.providerConfig.userInfoUrl, {
+    const response = await fetch(this.providerConfig.userInfoUrl!, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
 
@@ -104,7 +104,7 @@ export abstract class BaseOidcProvider implements IOidcProvider {
       client_secret: this.providerConfig.clientSecret,
     });
 
-    const response = await fetch(this.providerConfig.tokenUrl, {
+    const response = await fetch(this.providerConfig.tokenUrl!, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: body.toString(),

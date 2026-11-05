@@ -56,7 +56,7 @@ export class GithubOidcProvider extends BaseOidcProvider implements IOidcProvide
    */
   async handleCallback(code: string, state: string, redirectUri?: string): Promise<OidcClaims> {
     const tokens = await this.exchangeCodeForTokens(code, redirectUri);
-    const profile = await this.getUserProfile(tokens.access_token);
+    const profile = await this.fetchRawProfile(tokens.access_token);
 
     // GitHub may not include email in profile if it's private
     if (!profile.email) {
@@ -69,6 +69,27 @@ export class GithubOidcProvider extends BaseOidcProvider implements IOidcProvide
     }
 
     return this.mapProfileToClaims(profile);
+  }
+
+  /**
+   * Fetches the raw user profile from GitHub (without mapping).
+   *
+   * @param accessToken - OAuth2 access token.
+   * @returns Raw profile data.
+   */
+  private async fetchRawProfile(accessToken: string): Promise<Record<string, any>> {
+    const response = await fetch(this.config.userInfoUrl!, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: 'application/json',
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch user profile: ${response.statusText}`);
+    }
+
+    return response.json();
   }
 
   /**
@@ -113,7 +134,7 @@ export class GithubOidcProvider extends BaseOidcProvider implements IOidcProvide
       client_secret: this.config.clientSecret,
     });
 
-    const response = await fetch(this.config.tokenUrl, {
+    const response = await fetch(this.config.tokenUrl!, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -136,18 +157,7 @@ export class GithubOidcProvider extends BaseOidcProvider implements IOidcProvide
    * @returns Raw profile data.
    */
   async getUserProfile(accessToken: string): Promise<OidcClaims> {
-    const response = await fetch(this.config.userInfoUrl, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        Accept: 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch user profile: ${response.statusText}`);
-    }
-
-    const profile = await response.json();
+    const profile = await this.fetchRawProfile(accessToken);
     return this.mapProfileToClaims(profile);
   }
 

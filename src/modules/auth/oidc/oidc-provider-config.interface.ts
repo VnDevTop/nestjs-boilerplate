@@ -19,11 +19,11 @@ export interface OidcProviderConfig {
   /** OAuth2 scopes to request. */
   scopes: string[];
   /** Authorization endpoint URL. */
-  authorizationUrl: string;
+  authorizationUrl?: string;
   /** Token endpoint URL. */
-  tokenUrl: string;
+  tokenUrl?: string;
   /** User info endpoint URL. */
-  userInfoUrl: string;
+  userInfoUrl?: string;
   /** OIDC issuer URL (for discovery). */
   issuer?: string;
 }

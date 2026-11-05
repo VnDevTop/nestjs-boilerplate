@@ -7,6 +7,7 @@ import { databaseConfig } from './database.config.js';
 import { i18nConfig } from './i18n.config.js';
 import { mailConfig } from './mail.config.js';
 import { observeConfig } from './observe.config.js';
+import { oidcConfig } from './oidc.config.js';
 import { queueConfig } from './queue.config.js';
 import { resilienceConfig } from './resilience.config.js';
 import { securityHeaderConfig } from './security-header.config.js';
@@ -30,6 +31,7 @@ describe('config', () => {
           key.startsWith('QUEUE_') ||
           key.startsWith('MAIL_') ||
           key.startsWith('I18N_') ||
+          key.startsWith('OIDC_') ||
           key.startsWith('DB_') ||
           key.startsWith('OBSERVE_') ||
           key.startsWith('SWAGGER_') ||
@@ -251,6 +253,37 @@ describe('config', () => {
     it('returns observe configuration', () => {
       const config = observeConfig() as any;
       expect(config).toBeDefined();
+    });
+  });
+
+  describe('oidcConfig', () => {
+    it('returns oidc configuration with no providers when env not set', () => {
+      const config = oidcConfig() as any;
+      expect(config).toBeDefined();
+      expect(config.providers).toBeDefined();
+      expect(config.enabledProviders).toBeDefined();
+      // Ensure no providers registered
+      expect(Object.keys(config.providers)).toHaveLength(0);
+    });
+
+    it('returns enabled providers when env is set', () => {
+      process.env.OIDC_GOOGLE_CLIENT_ID = 'test-client-id';
+      process.env.OIDC_GOOGLE_CLIENT_SECRET = 'test-client-secret';
+      const config = oidcConfig() as any;
+      expect(config.providers.GOOGLE).toBeDefined();
+      expect(config.providers.GOOGLE.enabled).toBe(true);
+      expect(config.enabledProviders).toContain('GOOGLE');
+      delete process.env.OIDC_GOOGLE_CLIENT_ID;
+      delete process.env.OIDC_GOOGLE_CLIENT_SECRET;
+    });
+
+    it('skips providers without credentials', () => {
+      // Ensure no OIDC env vars are set
+      for (const key of Object.keys(process.env)) {
+        if (key.startsWith('OIDC_')) delete process.env[key];
+      }
+      const config = oidcConfig() as any;
+      expect(Object.keys(config.providers)).toHaveLength(0);
     });
   });
 

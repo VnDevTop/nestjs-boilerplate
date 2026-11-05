@@ -54,7 +54,7 @@ export class XOidcProvider extends BaseOidcProvider implements IOidcProvider {
    * @returns The full authorization URL.
    */
   getAuthorizationUrl(state: string, redirectUri?: string): string {
-    const url = new URL(this.config.authorizationUrl);
+    const url = new URL(this.config.authorizationUrl!);
     url.searchParams.set('client_id', this.config.clientId);
     url.searchParams.set('redirect_uri', redirectUri ?? this.config.callbackUrl);
     url.searchParams.set('response_type', 'code');
@@ -77,7 +77,7 @@ export class XOidcProvider extends BaseOidcProvider implements IOidcProvider {
    * @returns OIDC claims for the user.
    */
   async getUserProfile(accessToken: string): Promise<OidcClaims> {
-    const url = new URL(this.config.userInfoUrl);
+    const url = new URL(this.config.userInfoUrl!);
     url.searchParams.set('user.fields', 'id,name,username,profile_image_url');
 
     const response = await fetch(url.toString(), {

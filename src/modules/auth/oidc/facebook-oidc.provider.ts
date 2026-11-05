@@ -53,7 +53,7 @@ export class FacebookOidcProvider extends BaseOidcProvider implements IOidcProvi
    * @returns The full authorization URL.
    */
   getAuthorizationUrl(state: string, redirectUri?: string): string {
-    const url = new URL(this.config.authorizationUrl);
+    const url = new URL(this.config.authorizationUrl!);
     url.searchParams.set('client_id', this.config.clientId);
     url.searchParams.set('redirect_uri', redirectUri ?? this.config.callbackUrl);
     url.searchParams.set('response_type', 'code');
@@ -72,7 +72,7 @@ export class FacebookOidcProvider extends BaseOidcProvider implements IOidcProvi
    * @returns OIDC claims for the user.
    */
   async getUserProfile(accessToken: string): Promise<OidcClaims> {
-    const url = new URL(this.config.userInfoUrl);
+    const url = new URL(this.config.userInfoUrl!);
     url.searchParams.set('fields', 'id,name,email,first_name,last_name,picture');
     url.searchParams.set('access_token', accessToken);
 

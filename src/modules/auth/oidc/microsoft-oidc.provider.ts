@@ -31,10 +31,9 @@ export class MicrosoftOidcProvider extends BaseOidcProvider implements IOidcProv
     super({
       ...config,
       name: OidcProvider.MICROSOFT,
-      authorizationUrl: config.authorizationUrl || MICROSOFT_AUTHORIZATION_URL,
-      tokenUrl: config.tokenUrl || MICROSOFT_TOKEN_URL,
-      userInfoUrl: config.userInfoUrl || MICROSOFT_USER_INFO_URL,
-      issuer: config.issuer || MICROSOFT_ISSUER,
+      tokenUrl: config.tokenUrl ?? MICROSOFT_TOKEN_URL,
+      userInfoUrl: config.userInfoUrl ?? MICROSOFT_USER_INFO_URL,
+      issuer: config.issuer ?? MICROSOFT_ISSUER,
       scopes: config.scopes?.length ? config.scopes : ['openid', 'profile', 'email', 'User.Read'],
     });
   }
