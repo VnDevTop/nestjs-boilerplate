@@ -5,6 +5,25 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [12.8.2] - 2026-11-05
+
+### Added
+
+- Phase 8.3 e2e coverage: health check endpoints (`GET /health`, `GET /health/ready`), admin controller e2e suites (authentication and role-based access control flows), and users happy-path e2e tests.
+- E2E seed helpers and standalone admin seed script (`npm run seed`).
+
+### Changed
+
+- OIDC subject identifiers are now prefixed with the provider identifier (e.g. `google-oauth2|1234567890`) and user lookups use the subject identifier instead of the internal user UUID.
+
+### Fixed
+
+- OIDC user lookup by subject identifier.
+
+### CI
+
+- GitHub Actions test workflow for pull requests targeting `master`, running build, database seed, unit and e2e tests against PostgreSQL and Redis.
+
 ## [12.6.2] - 2026-11-03
 
 ### Added
