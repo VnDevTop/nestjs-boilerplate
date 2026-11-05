@@ -24,6 +24,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - GitHub Actions test workflow for pull requests targeting `master`, running build, database seed, unit and e2e tests against PostgreSQL and Redis.
 
+## [12.8.1] - 2026-11-04
+
+### Added
+
+- Phase 8 basic JWT authentication and authorization (auth module skeleton, email/password registration and login, Argon2id password hashing, JWT access/refresh tokens, JWT strategy and guards, RBAC, permissions, admin module foundation, global guard activation).
+- Phase 8.2 OIDC providers (Google, Microsoft, GitHub, Apple, Facebook, X/Twitter) with provider abstraction, implementations, registration and config, OIDC service and controller, setup documentation.
+
+### Fixed
+
+- OIDC user lookup by subject identifier.
+
+### Tests
+
+- Unit and e2e tests for JWT auth and OIDC flows.
+
+## [12.7.4] - 2026-11-04
+
+### Added
+
+- User unit tests, user e2e tests, OIDC claim mapping documentation, Phase 7 summary.
+
+## [12.7.3] - 2026-11-04
+
+### Added
+
+- Users service, user profile endpoints, role management, data retention and cleanup hooks.
+
+## [12.7.2] - 2026-11-03
+
+### Added
+
+- User entity compliant with OIDC claims, user repository, soft delete and partial unique indexes.
+
+## [12.7.1] - 2026-11-03
+
+### Added
+
+- Security tooling, CI dependency bumps, shared users/auth enums and types, Phase 7 summary.
+
 ## [12.6.2] - 2026-11-03
 
 ### Added

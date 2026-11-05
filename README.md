@@ -14,7 +14,8 @@
   <a href="https://github.com/VnDevTop/nestjs-boilerplate/actions/workflows/codeql.yml"><img src="https://github.com/VnDevTop/nestjs-boilerplate/actions/workflows/codeql.yml/badge.svg?branch=master" alt="CodeQL" /></a>
   <a href="https://github.com/VnDevTop/nestjs-boilerplate"><img src="https://img.shields.io/github/commit-activity/t/VnDevTop/nestjs-boilerplate?label=commits" alt="Commits" /></a>
   <a href="https://github.com/VnDevTop/nestjs-boilerplate"><img src="https://aschey.tech/tokei/github.com/VnDevTop/nestjs-boilerplate?category=code" alt="Lines of code" /></a>
-  <a href="https://github.com/VnDevTop/nestjs-boilerplate"><img src="https://img.shields.io/badge/tests-58%20unit%20%7C%201%20e2e-brightgreen" alt="Tests" /></a>
+  <a href="https://github.com/VnDevTop/nestjs-boilerplate"><img src="https://img.shields.io/badge/tests-263%20unit%20%7C%2037%20e2e-brightgreen" alt="Tests" /></a>
+  <a href="https://github.com/VnDevTop/nestjs-boilerplate/releases"><img src="https://img.shields.io/badge/version-12.8.2-blue" alt="Version" /></a>
   <a href="https://github.com/VnDevTop/nestjs-boilerplate/blob/master/SECURITY.md"><img src="https://img.shields.io/badge/security-policy-blue" alt="Security Policy" /></a>
   <a href="https://github.com/VnDevTop/nestjs-boilerplate"><img src="https://img.shields.io/badge/dependabot-enabled-brightgreen?logo=dependabot" alt="Dependabot" /></a>
   <a href="https://snyk.io/test/github/VnDevTop/nestjs-boilerplate"><img src="https://snyk.io/test/github/VnDevTop/nestjs-boilerplate/badge.svg" alt="Snyk" /></a>
