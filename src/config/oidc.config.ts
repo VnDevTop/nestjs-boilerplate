@@ -20,12 +20,23 @@ import { OidcProvider } from '../common/enums/oidc-provider.enum.js';
 export const oidcConfig = registerAs('oidc', () => {
   const providers: Record<string, any> = {};
 
+  // Provider-specific endpoint defaults
+  const PROVIDER_ENDPOINTS: Record<string, { authorizationUrl: string; tokenUrl: string; userInfoUrl: string; issuer: string }> = {
+    GOOGLE: {
+      authorizationUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
+      tokenUrl: 'https://oauth2.googleapis.com/token',
+      userInfoUrl: 'https://www.googleapis.com/oauth2/v3/userinfo',
+      issuer: 'https://accounts.google.com',
+    },
+  };
+
   for (const provider of Object.values(OidcProvider)) {
     const prefix = `OIDC_${provider}`;
     const clientId = process.env[`${prefix}_CLIENT_ID`];
     const clientSecret = process.env[`${prefix}_CLIENT_SECRET`];
 
     if (clientId && clientSecret) {
+      const endpoints = PROVIDER_ENDPOINTS[provider] ?? {};
       providers[provider] = {
         name: provider,
         enabled: true,
@@ -33,6 +44,10 @@ export const oidcConfig = registerAs('oidc', () => {
         clientSecret,
         callbackUrl: process.env[`${prefix}_CALLBACK_URL`] ?? `http://localhost:3000/auth/oidc/${provider.toLowerCase()}/callback`,
         scopes: process.env[`${prefix}_SCOPES`]?.split(',') ?? ['openid', 'profile', 'email'],
+        authorizationUrl: process.env[`${prefix}_AUTHORIZATION_URL`] ?? endpoints.authorizationUrl,
+        tokenUrl: process.env[`${prefix}_TOKEN_URL`] ?? endpoints.tokenUrl,
+        userInfoUrl: process.env[`${prefix}_USER_INFO_URL`] ?? endpoints.userInfoUrl,
+        issuer: process.env[`${prefix}_ISSUER`] ?? endpoints.issuer,
       };
     }
   }
