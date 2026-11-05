@@ -84,6 +84,26 @@ describe('UsersService', () => {
     });
   });
 
+  describe('findBySub', () => {
+    it('should return a user when found by subject identifier', async () => {
+      vi.mocked(userRepository.findBySub).mockResolvedValue(mockUser);
+
+      const result = await service.findBySub('sub-123');
+
+      expect(result).toEqual(mockUser);
+      expect(userRepository.findBySub).toHaveBeenCalledWith('sub-123');
+    });
+
+    it('should return null when user not found by subject identifier', async () => {
+      vi.mocked(userRepository.findBySub).mockResolvedValue(null);
+
+      const result = await service.findBySub('non-existent');
+
+      expect(result).toBeNull();
+      expect(userRepository.findBySub).toHaveBeenCalledWith('non-existent');
+    });
+  });
+
   describe('findByEmail', () => {
     it('should return a user when found by email', async () => {
       vi.mocked(userRepository.findByEmail).mockResolvedValue(mockUser);
