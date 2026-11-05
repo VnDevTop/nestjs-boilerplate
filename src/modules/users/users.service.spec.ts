@@ -39,6 +39,7 @@ describe('UsersService', () => {
             create: vi.fn(),
             findBySub: vi.fn(),
             findById: vi.fn(),
+            findByIdWithTotp: vi.fn(),
             findByEmail: vi.fn(),
             findByEmailWithPassword: vi.fn(),
             update: vi.fn(),
@@ -82,6 +83,26 @@ describe('UsersService', () => {
 
       expect(result).toBeNull();
       expect(userRepository.findById).toHaveBeenCalledWith('non-existent');
+    });
+  });
+
+  describe('findByIdWithTotp', () => {
+    it('should return a user when found with totp', async () => {
+      vi.mocked(userRepository.findByIdWithTotp).mockResolvedValue(mockUser);
+
+      const result = await service.findByIdWithTotp('user-1');
+
+      expect(result).toEqual(mockUser);
+      expect(userRepository.findByIdWithTotp).toHaveBeenCalledWith('user-1');
+    });
+
+    it('should return null when user not found with totp', async () => {
+      vi.mocked(userRepository.findByIdWithTotp).mockResolvedValue(null);
+
+      const result = await service.findByIdWithTotp('non-existent');
+
+      expect(result).toBeNull();
+      expect(userRepository.findByIdWithTotp).toHaveBeenCalledWith('non-existent');
     });
   });
 

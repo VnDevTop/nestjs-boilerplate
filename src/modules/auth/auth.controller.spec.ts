@@ -6,6 +6,7 @@ import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
 import { AuthResult } from '../../common/interfaces/auth-result.interface.js';
 import { TokenPair } from '../../common/interfaces/token-pair.interface.js';
+import type { RequestUser } from '../../common/interfaces/request-user.interface.js';
 
 describe('AuthController', () => {
   let controller: AuthController;
@@ -15,6 +16,9 @@ describe('AuthController', () => {
     register: vi.fn(),
     login: vi.fn(),
     refreshTokens: vi.fn(),
+    setupMfa: vi.fn(),
+    verifyMfa: vi.fn(),
+    disableMfa: vi.fn(),
   };
 
   const mockAuthResult: AuthResult = {
@@ -112,6 +116,47 @@ describe('AuthController', () => {
       await expect(controller.refresh({ refreshToken: 'invalid-refresh-token' })).rejects.toThrow(
         UnauthorizedException,
       );
+    });
+  });
+
+  describe('setupMfa', () => {
+    it('should start totp setup and return secret, otpauth url and qr code', async () => {
+      const result = {
+        secret: 'JBSWY3DPEHPK3PXP',
+        otpauthUrl: 'otpauth://totp/NestJS%20Boilerplate:user%40example.com?secret=JBSWY3DPEHPK3PXP',
+        qrCode: 'data:image/png;base64,abc',
+      };
+      mockAuthService.setupMfa.mockResolvedValue(result);
+
+      const user = { sub: 'user-1', email: 'test@example.com' } as RequestUser;
+      const resultFromController = await controller.setupMfa(user);
+
+      expect(resultFromController).toEqual(result);
+      expect(mockAuthService.setupMfa).toHaveBeenCalledWith('user-1', 'test@example.com');
+    });
+  });
+
+  describe('verifyMfa', () => {
+    it('should verify totp code and enable mfa', async () => {
+      mockAuthService.verifyMfa.mockResolvedValue({ enabled: true });
+
+      const user = { sub: 'user-1', email: 'test@example.com' } as RequestUser;
+      const result = await controller.verifyMfa({ code: '123456' }, user);
+
+      expect(result).toEqual({ enabled: true });
+      expect(mockAuthService.verifyMfa).toHaveBeenCalledWith('user-1', 'test@example.com', '123456');
+    });
+  });
+
+  describe('disableMfa', () => {
+    it('should disable mfa after verifying totp code', async () => {
+      mockAuthService.disableMfa.mockResolvedValue({ enabled: true });
+
+      const user = { sub: 'user-1', email: 'test@example.com' } as RequestUser;
+      const result = await controller.disableMfa({ code: '123456' }, user);
+
+      expect(result).toEqual({ enabled: true });
+      expect(mockAuthService.disableMfa).toHaveBeenCalledWith('user-1', 'test@example.com', '123456');
     });
   });
 });

@@ -93,6 +93,37 @@ describe('UserRepository', () => {
     });
   });
 
+  describe('findByIdWithTotp', () => {
+    it('should find user by id including totp secret', async () => {
+      const queryBuilder = {
+        addSelect: vi.fn().mockReturnThis(),
+        where: vi.fn().mockReturnThis(),
+        getOne: vi.fn().mockResolvedValue(mockUser),
+      };
+      vi.mocked(mockRepository.createQueryBuilder).mockReturnValue(queryBuilder as any);
+
+      const result = await repository.findByIdWithTotp('user-1');
+
+      expect(result).toEqual(mockUser);
+      expect(queryBuilder.addSelect).toHaveBeenCalledWith('user.totpSecret');
+      expect(queryBuilder.where).toHaveBeenCalledWith('user.id = :id', { id: 'user-1' });
+      expect(queryBuilder.getOne).toHaveBeenCalled();
+    });
+
+    it('should return null when user not found by id with totp', async () => {
+      const queryBuilder = {
+        addSelect: vi.fn().mockReturnThis(),
+        where: vi.fn().mockReturnThis(),
+        getOne: vi.fn().mockResolvedValue(null),
+      };
+      vi.mocked(mockRepository.createQueryBuilder).mockReturnValue(queryBuilder as any);
+
+      const result = await repository.findByIdWithTotp('non-existent');
+
+      expect(result).toBeNull();
+    });
+  });
+
   describe('findByEmail', () => {
     it('should find user by email', async () => {
       vi.mocked(mockRepository.findOne).mockResolvedValue(mockUser);

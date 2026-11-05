@@ -1,4 +1,4 @@
-import { ConflictException, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
@@ -9,6 +9,14 @@ import { PasswordService } from './password.service.js';
 import { TotpService } from './totp.service.js';
 import { Role } from '../../common/enums/role.enum.js';
 import { User } from '../users/entities/user.entity.js';
+
+const { toDataURLMock } = vi.hoisted(() => ({
+  toDataURLMock: vi.fn(async () => 'data:image/png;base64,abc'),
+}));
+
+vi.mock('qrcode', () => ({
+  toDataURL: toDataURLMock,
+}));
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -328,6 +336,16 @@ describe('AuthService', () => {
       expect(usersService.updateProfile).toHaveBeenCalledWith('user-1', expect.objectContaining({ totpEnabled: true }));
     });
 
+    it('should return enabled false when setup totp code is invalid', async () => {
+      vi.mocked(usersService.findByIdWithTotp).mockResolvedValue({ ...mockUser, totpSecret: 'JBSWY3DPEHPK3PXP' });
+      vi.mocked(totpService.verifyTotp).mockResolvedValue(false);
+
+      const result = await service.verifyMfa('user-1', 'test@example.com', '000000');
+
+      expect(result.enabled).toBe(false);
+      expect(usersService.updateProfile).not.toHaveBeenCalled();
+    });
+
     it('should return enabled false when totp secret is missing', async () => {
       vi.mocked(usersService.findByIdWithTotp).mockResolvedValue({ ...mockUser, totpSecret: null });
 
@@ -359,6 +377,98 @@ describe('AuthService', () => {
       const result = await service.verifyMfa('user-1', 'test@example.com', '000000', 'mfa-token');
 
       expect(result.enabled).toBe(false);
+    });
+
+    it('should throw UnauthorizedException when mfa token has invalid type', async () => {
+      vi.mocked(jwtService.verifyAsync).mockResolvedValue({ sub: 'user-1', type: 'access' });
+      vi.mocked(usersService.findByIdWithTotp).mockResolvedValue({ ...mockUser, totpSecret: 'JBSWY3DPEHPK3PXP' });
+
+      await expect(service.verifyMfa('user-1', 'test@example.com', '123456', 'mfa-token')).rejects.toThrow(
+        UnauthorizedException,
+      );
+    });
+
+    it('should return enabled false when mfa token user has no secret', async () => {
+      vi.mocked(jwtService.verifyAsync).mockResolvedValue({ sub: 'user-1', type: 'mfa' });
+      vi.mocked(usersService.findByIdWithTotp).mockResolvedValue({ ...mockUser, totpSecret: null });
+
+      const result = await service.verifyMfa('user-1', 'test@example.com', '123456', 'mfa-token');
+
+      expect(result.enabled).toBe(false);
+    });
+
+    it('should throw NotFoundException when user not found', async () => {
+      vi.mocked(usersService.findByIdWithTotp).mockResolvedValue(null);
+
+      await expect(service.verifyMfa('user-1', 'test@example.com', '123456')).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('disableMfa', () => {
+    it('should disable mfa when totp code is valid', async () => {
+      vi.mocked(usersService.findByIdWithTotp).mockResolvedValue({ ...mockUser, totpSecret: 'JBSWY3DPEHPK3PXP' });
+      vi.mocked(totpService.verifyTotp).mockResolvedValue(true);
+
+      const result = await service.disableMfa('user-1', 'test@example.com', '123456');
+
+      expect(result.enabled).toBe(true);
+      expect(usersService.updateProfile).toHaveBeenCalledWith('user-1', {
+        totpSecret: null,
+        totpEnabled: false,
+        backupCodes: null,
+      });
+    });
+
+    it('should return enabled false when totp code is invalid', async () => {
+      vi.mocked(usersService.findByIdWithTotp).mockResolvedValue({ ...mockUser, totpSecret: 'JBSWY3DPEHPK3PXP' });
+      vi.mocked(totpService.verifyTotp).mockResolvedValue(false);
+
+      const result = await service.disableMfa('user-1', 'test@example.com', '000000');
+
+      expect(result.enabled).toBe(false);
+    });
+
+    it('should return enabled false when totp secret is missing', async () => {
+      vi.mocked(usersService.findByIdWithTotp).mockResolvedValue({ ...mockUser, totpSecret: null });
+
+      const result = await service.disableMfa('user-1', 'test@example.com', '123456');
+
+      expect(result.enabled).toBe(false);
+    });
+
+    it('should throw NotFoundException when user not found', async () => {
+      vi.mocked(usersService.findByIdWithTotp).mockResolvedValue(null);
+
+      await expect(service.disableMfa('user-1', 'test@example.com', '123456')).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('setupMfa', () => {
+    it('should set up totp and return secret, otpauth url and qr code', async () => {
+      vi.mocked(usersService.findByIdWithTotp).mockResolvedValue(mockUser);
+      vi.mocked(totpService.generateSecret).mockReturnValue('JBSWY3DPEHPK3PXP');
+      vi.mocked(totpService.generateUri).mockReturnValue('otpauth://totp/NestJS%20Boilerplate:user%40example.com?secret=JBSWY3DPEHPK3PXP');
+      toDataURLMock.mockResolvedValue('data:image/png;base64,abc');
+      vi.mocked(usersService.updateProfile).mockResolvedValue(mockUser);
+
+      const result = await service.setupMfa('user-1', 'test@example.com');
+
+      expect(result).toEqual({
+        secret: 'JBSWY3DPEHPK3PXP',
+        otpauthUrl: 'otpauth://totp/NestJS%20Boilerplate:user%40example.com?secret=JBSWY3DPEHPK3PXP',
+        qrCode: 'data:image/png;base64,abc',
+      });
+      expect(toDataURLMock).toHaveBeenCalledWith('otpauth://totp/NestJS%20Boilerplate:user%40example.com?secret=JBSWY3DPEHPK3PXP');
+      expect(usersService.updateProfile).toHaveBeenCalledWith('user-1', {
+        totpSecret: 'JBSWY3DPEHPK3PXP',
+        totpEnabled: false,
+      });
+    });
+
+    it('should throw NotFoundException when user not found', async () => {
+      vi.mocked(usersService.findByIdWithTotp).mockResolvedValue(null);
+
+      await expect(service.setupMfa('user-1', 'test@example.com')).rejects.toThrow(NotFoundException);
     });
   });
 });

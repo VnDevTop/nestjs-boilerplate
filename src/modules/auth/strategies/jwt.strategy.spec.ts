@@ -73,6 +73,17 @@ describe('JwtStrategy', () => {
       ).rejects.toThrow(UnauthorizedException);
     });
 
+    it('should throw UnauthorizedException for mfa token', async () => {
+      await expect(
+        strategy.validate({
+          sub: 'user-1',
+          email: 'test@example.com',
+          roles: [Role.USER],
+          type: 'mfa',
+        }),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
     it('should throw UnauthorizedException when user not found', async () => {
       vi.mocked(usersService.findById).mockResolvedValue(null);
 
