@@ -59,6 +59,24 @@ export class AuthService {
   }
 
   /**
+   * Issues a short-lived MFA challenge token for users with TOTP enabled.
+   *
+   * @param user - User entity.
+   * @returns Signed MFA challenge token.
+   */
+  async issueMfaToken(user: User): Promise<string> {
+    return this.jwtService.signAsync(
+      {
+        sub: user.id,
+        email: user.email,
+        roles: user.roles as any,
+        type: 'mfa',
+      },
+      { expiresIn: '10m' },
+    );
+  }
+
+  /**
    * Refreshes an access token using a valid refresh token.
    *
    * @param refreshToken - The refresh token string.
@@ -169,6 +187,11 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
+    if (user.totpEnabled) {
+      const mfaToken = await this.issueMfaToken(user);
+      return { user: requestUser, mfaRequired: true, mfaToken };
+    }
+
     const tokens = await this.issueTokens({
       sub: user.id,
       email: user.email,
@@ -209,10 +232,41 @@ export class AuthService {
    * @param code - The user submitted TOTP code.
    * @returns True when MFA was enabled, false otherwise.
    */
-  async verifyMfa(userId: string, email: string, code: string): Promise<{ enabled: boolean }> {
+  async verifyMfa(
+    userId: string,
+    email: string,
+    code: string,
+    mfaToken?: string,
+  ): Promise<{ enabled: boolean; tokens?: TokenPair }> {
     const user = await this.usersService.findByIdWithTotp(userId);
     if (!user) {
       throw new NotFoundException('User not found');
+    }
+
+    if (mfaToken) {
+      const payload = await this.jwtService.verifyAsync(mfaToken, { secret: jwtConfig().secret });
+      if (payload.type !== 'mfa') {
+        throw new UnauthorizedException('Invalid MFA token');
+      }
+
+      const secret = user.totpSecret;
+      if (!secret) {
+        return { enabled: false };
+      }
+
+      const valid = await this.totpService.verifyTotp(code, secret);
+      if (!valid) {
+        return { enabled: false };
+      }
+
+      const tokens = await this.issueTokens({
+        sub: user.id,
+        email: user.email,
+        roles: user.roles as any,
+        mfaVerified: true,
+      });
+
+      return { enabled: true, tokens };
     }
 
     const secret = user.totpSecret;

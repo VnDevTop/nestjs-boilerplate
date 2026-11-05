@@ -171,7 +171,7 @@ describe('OidcService', () => {
       const result = await service.handleCallback('google', 'auth-code', 'valid-state');
 
       expect(result.user.sub).toBe('user-1');
-      expect(result.tokens.accessToken).toBe('access-token');
+      expect(result.tokens?.accessToken).toBe('access-token');
       expect(authService.issueTokens).toHaveBeenCalled();
     });
 
@@ -198,7 +198,7 @@ describe('OidcService', () => {
       expect(usersService.create).toHaveBeenCalledWith(
         expect.objectContaining({ sub: 'google-oauth2|new-google-sub' }),
       );
-      expect(result.tokens.accessToken).toBe('access-token');
+      expect(result.tokens?.accessToken).toBe('access-token');
     });
 
     it('should throw UnauthorizedException when no sub in claims', async () => {
@@ -225,7 +225,7 @@ describe('OidcService', () => {
       const result = await service.handleCallback('google', 'auth-code', 'valid-state');
 
       expect(usersService.updateProfile).toHaveBeenCalled();
-      expect(result.tokens.accessToken).toBe('access-token');
+      expect(result.tokens?.accessToken).toBe('access-token');
     });
 
     it('should throw UnauthorizedException when the state has not been issued', async () => {

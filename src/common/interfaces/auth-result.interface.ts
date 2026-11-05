@@ -9,6 +9,10 @@ import { TokenPair } from './token-pair.interface.js';
 export interface AuthResult {
   /** Authenticated user. */
   user: RequestUser;
-  /** Issued token pair. */
-  tokens: TokenPair;
+  /** Issued token pair. Absent when MFA verification is pending. */
+  tokens?: TokenPair;
+  /** Whether the user must complete MFA verification before tokens are issued. */
+  mfaRequired?: boolean;
+  /** Pending MFA challenge token (JWT) when `mfaRequired` is true. */
+  mfaToken?: string;
 }

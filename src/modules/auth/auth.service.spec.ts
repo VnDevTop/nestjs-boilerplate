@@ -94,9 +94,9 @@ describe('AuthService', () => {
 
       expect(result.user.sub).toBe('user-1');
       expect(result.user.email).toBe('test@example.com');
-      expect(result.tokens.accessToken).toBe('access-token');
-      expect(result.tokens.refreshToken).toBe('refresh-token');
-      expect(result.tokens.tokenType).toBe('Bearer');
+      expect(result.tokens?.accessToken).toBe('access-token');
+      expect(result.tokens?.refreshToken).toBe('refresh-token');
+      expect(result.tokens?.tokenType).toBe('Bearer');
       expect(usersService.create).toHaveBeenCalledWith({
         email: 'test@example.com',
         sub: 'test@example.com',
@@ -155,8 +155,8 @@ describe('AuthService', () => {
       const result = await service.login('test@example.com', 'password123');
 
       expect(result.user.sub).toBe('user-1');
-      expect(result.tokens.accessToken).toBe('access-token');
-      expect(result.tokens.refreshToken).toBe('refresh-token');
+      expect(result.tokens?.accessToken).toBe('access-token');
+      expect(result.tokens?.refreshToken).toBe('refresh-token');
     });
 
     it('should throw UnauthorizedException for invalid email', async () => {
