@@ -28,6 +28,12 @@ export const oidcConfig = registerAs('oidc', () => {
       userInfoUrl: 'https://www.googleapis.com/oauth2/v3/userinfo',
       issuer: 'https://accounts.google.com',
     },
+    MICROSOFT: {
+      authorizationUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
+      tokenUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
+      userInfoUrl: 'https://graph.microsoft.com/v1.0/me',
+      issuer: 'https://login.microsoftonline.com/common/v2.0',
+    },
   };
 
   for (const provider of Object.values(OidcProvider)) {
