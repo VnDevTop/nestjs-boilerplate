@@ -195,7 +195,9 @@ describe('OidcService', () => {
 
       const result = await service.handleCallback('google', 'auth-code', 'valid-state');
 
-      expect(usersService.create).toHaveBeenCalled();
+      expect(usersService.create).toHaveBeenCalledWith(
+        expect.objectContaining({ sub: 'google-oauth2|new-google-sub' }),
+      );
       expect(result.tokens.accessToken).toBe('access-token');
     });
 

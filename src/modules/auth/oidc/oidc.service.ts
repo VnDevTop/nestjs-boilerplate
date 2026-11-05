@@ -190,6 +190,20 @@ export class OidcService {
   }
 
   /**
+   * Builds a traceable OIDC subject identifier.
+   *
+   * Prefixes the provider name and the raw subject with a delimiter so the
+   * resulting value is easy to trace back to its origin provider.
+   *
+   * @param providerName - Provider name (e.g. 'GOOGLE').
+   * @param sub - Raw OIDC subject identifier.
+   * @returns The prefixed subject identifier (e.g. 'google-oauth2|1234567890').
+   */
+  private buildSubjectIdentifier(providerName: string, sub: string): string {
+    return `${providerName.toLowerCase()}-oauth2|${sub}`;
+  }
+
+  /**
    * Finds an existing user by OIDC subject or creates a new one.
    *
    * @param claims - OIDC claims from the provider.
@@ -197,8 +211,10 @@ export class OidcService {
    * @returns The user entity.
    */
   private async findOrCreateUser(claims: OidcClaims, providerName: string): Promise<any> {
+    const sub = this.buildSubjectIdentifier(providerName, claims.sub);
+
     // Try to find by sub (OIDC subject)
-    let user = await this.usersService.findBySub(claims.sub);
+    let user = await this.usersService.findBySub(sub);
 
     if (!user) {
       // Try to find by email
@@ -221,10 +237,10 @@ export class OidcService {
     }
 
     // Create new user
-    this.logger.log(`Creating new user from ${providerName}: ${claims.sub}`);
+    this.logger.log(`Creating new user from ${providerName}: ${sub}`);
     return this.usersService.create({
-      sub: claims.sub,
-      email: claims.email ?? `${claims.sub}@${providerName.toLowerCase()}.oidc`,
+      sub,
+      email: claims.email ?? `${sub}@${providerName.toLowerCase()}.oidc`,
       emailVerified: claims.email_verified ?? false,
       name: claims.name ?? null,
       givenName: claims.given_name ?? null,
