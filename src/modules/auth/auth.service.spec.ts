@@ -6,6 +6,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { AuthService } from './auth.service.js';
 import { UsersService } from '../users/users.service.js';
 import { PasswordService } from './password.service.js';
+import { TotpService } from './totp.service.js';
 import { Role } from '../../common/enums/role.enum.js';
 import { User } from '../users/entities/user.entity.js';
 
@@ -60,6 +61,15 @@ describe('AuthService', () => {
           useValue: {
             signAsync: vi.fn(),
             verifyAsync: vi.fn(),
+          },
+        },
+        {
+          provide: TotpService,
+          useValue: {
+            generateSecret: vi.fn(),
+            generateUri: vi.fn(),
+            verifyTotp: vi.fn(),
+            generateBackupCodes: vi.fn(),
           },
         },
       ],

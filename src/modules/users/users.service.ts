@@ -34,6 +34,20 @@ export class UsersService {
   }
 
   /**
+   * Finds a user by ID including the TOTP secret.
+   *
+   * Used for MFA verification flows where the TOTP secret is needed.
+   * The `totpSecret` column has `select: false` by default, so this
+   * method explicitly selects it.
+   *
+   * @param id - User ID.
+   * @returns The matching user with TOTP secret, or null if not found.
+   */
+  async findByIdWithTotp(id: string): Promise<User | null> {
+    return this.userRepository.findByIdWithTotp(id);
+  }
+
+  /**
    * Finds a user by subject identifier (OIDC `sub` claim).
    *
    * The OIDC subject is an opaque provider-specific identifier (often a

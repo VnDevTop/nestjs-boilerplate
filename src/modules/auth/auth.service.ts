@@ -1,5 +1,7 @@
-import { ConflictException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { toDataURL } from 'qrcode';
+import { TotpService } from './totp.service.js';
 
 import { UsersService } from '../users/users.service.js';
 import { PasswordService } from './password.service.js';
@@ -27,6 +29,7 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly passwordService: PasswordService,
     private readonly jwtService: JwtService,
+    private readonly totpService: TotpService,
   ) {}
 
   /**
@@ -173,6 +176,95 @@ export class AuthService {
     });
 
     return { user: requestUser, tokens };
+  }
+
+  /**
+   * Sets up TOTP for an authenticated user and returns the provisioning URI and QR code.
+   *
+   * @param userId - User ID (internal identifier).
+   * @param email - User email used as the TOTP label.
+   * @returns The TOTP secret, otpauth URI and QR code.
+   */
+  async setupMfa(userId: string, email: string): Promise<{ secret: string; otpauthUrl: string; qrCode: string }> {
+    const user = await this.usersService.findByIdWithTotp(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const secret = this.totpService.generateSecret();
+    const otpauthUrl = this.totpService.generateUri(secret, email);
+
+    await this.usersService.updateProfile(userId, { totpSecret: secret, totpEnabled: false });
+
+    const qrCode = await toDataURL(otpauthUrl);
+
+    return { secret, otpauthUrl, qrCode };
+  }
+
+  /**
+   * Verifies a TOTP code and enables two-factor authentication if valid.
+   *
+   * @param userId - User ID (internal identifier).
+   * @param email - User email used as the TOTP label.
+   * @param code - The user submitted TOTP code.
+   * @returns True when MFA was enabled, false otherwise.
+   */
+  async verifyMfa(userId: string, email: string, code: string): Promise<{ enabled: boolean }> {
+    const user = await this.usersService.findByIdWithTotp(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const secret = user.totpSecret;
+    if (!secret) {
+      return { enabled: false };
+    }
+
+    const valid = await this.totpService.verifyTotp(code, secret);
+    if (!valid) {
+      return { enabled: false };
+    }
+
+    await this.usersService.updateProfile(userId, {
+      totpSecret: secret,
+      totpEnabled: true,
+      backupCodes: this.totpService.generateBackupCodes(),
+    });
+
+    return { enabled: true };
+  }
+
+  /**
+   * Disables two-factor authentication after verifying a valid TOTP code.
+   *
+   * @param userId - User ID (internal identifier).
+   * @param email - User email used as the TOTP label.
+   * @param code - The user submitted TOTP code.
+   * @returns True when MFA was disabled, false otherwise.
+   */
+  async disableMfa(userId: string, email: string, code: string): Promise<{ enabled: boolean }> {
+    const user = await this.usersService.findByIdWithTotp(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const secret = user.totpSecret;
+    if (!secret) {
+      return { enabled: false };
+    }
+
+    const valid = await this.totpService.verifyTotp(code, secret);
+    if (!valid) {
+      return { enabled: false };
+    }
+
+    await this.usersService.updateProfile(userId, {
+      totpSecret: null,
+      totpEnabled: false,
+      backupCodes: null,
+    });
+
+    return { enabled: true };
   }
 
   /**

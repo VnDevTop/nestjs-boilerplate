@@ -2,6 +2,8 @@ import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { Public } from '../../common/decorators/public.decorator.js';
+import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
+import type { RequestUser } from '../../common/interfaces/request-user.interface.js';
 import { AuthService } from './auth.service.js';
 
 /**
@@ -50,5 +52,38 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Invalid refresh token' })
   async refresh(@Body() body: { refreshToken: string }) {
     return this.authService.refreshTokens(body.refreshToken);
+  }
+
+  /**
+   * Starts TOTP two-factor setup for the authenticated user.
+   */
+  @Post('mfa/setup')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Start TOTP two-factor setup' })
+  @ApiResponse({ status: 200, description: 'TOTP secret generated' })
+  async setupMfa(@CurrentUser() user: RequestUser) {
+    return this.authService.setupMfa(user.sub, user.email ?? user.sub);
+  }
+
+  /**
+   * Verifies a TOTP code and enables two-factor authentication.
+   */
+  @Post('mfa/verify')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Verify TOTP code and enable two-factor authentication' })
+  @ApiResponse({ status: 200, description: 'Two-factor authentication enabled' })
+  async verifyMfa(@Body() body: { code: string }, @CurrentUser() user: RequestUser) {
+    return this.authService.verifyMfa(user.sub, user.email ?? user.sub, body.code);
+  }
+
+  /**
+   * Disables two-factor authentication after verifying a TOTP code.
+   */
+  @Post('mfa/disable')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Disable two-factor authentication' })
+  @ApiResponse({ status: 200, description: 'Two-factor authentication disabled' })
+  async disableMfa(@Body() body: { code: string }, @CurrentUser() user: RequestUser) {
+    return this.authService.disableMfa(user.sub, user.email ?? user.sub, body.code);
   }
 }

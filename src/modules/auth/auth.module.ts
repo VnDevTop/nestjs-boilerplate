@@ -9,6 +9,7 @@ import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
 import { PasswordService } from './password.service.js';
+import { TotpService } from './totp.service.js';
 import { JwtStrategy } from './strategies/jwt.strategy.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
 import { AuthGuard } from './guards/auth.guard.js';
@@ -36,6 +37,7 @@ import { jwtConfig } from '../../config/jwt.config.js';
   providers: [
     AuthService,
     PasswordService,
+    TotpService,
     JwtStrategy,
     JwtAuthGuard,
     AuthGuard,
@@ -48,6 +50,6 @@ import { jwtConfig } from '../../config/jwt.config.js';
       useClass: GlobalAuthGuard,
     },
   ],
-  exports: [AuthService, PasswordService, JwtStrategy, JwtAuthGuard, AuthGuard, PermissionsGuard, RolesGuard, OidcProviderRegistry, OidcService, JwtModule, PassportModule],
+  exports: [AuthService, PasswordService, TotpService, JwtStrategy, JwtAuthGuard, AuthGuard, PermissionsGuard, RolesGuard, OidcProviderRegistry, OidcService, JwtModule, PassportModule],
 })
 export class AuthModule {}
