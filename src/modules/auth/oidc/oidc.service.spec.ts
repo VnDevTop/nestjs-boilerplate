@@ -100,6 +100,9 @@ describe('OidcService', () => {
 
     service = module.get<OidcService>(OidcService);
 
+    // Prime a valid OIDC state so callback tests can proceed to the provider
+    service.getAuthorizationUrl('google', 'valid-state');
+
     registry = module.get<OidcProviderRegistry>(OidcProviderRegistry);
     usersService = module.get<UsersService>(UsersService);
     authService = module.get<AuthService>(AuthService);
@@ -164,7 +167,7 @@ describe('OidcService', () => {
       vi.mocked(usersService.findById).mockResolvedValue(mockUser as any);
       vi.mocked(usersService.updateProfile).mockResolvedValue(mockUser as any);
 
-      const result = await service.handleCallback('google', 'auth-code', 'state');
+      const result = await service.handleCallback('google', 'auth-code', 'valid-state');
 
       expect(result.user.sub).toBe('user-1');
       expect(result.tokens.accessToken).toBe('access-token');
@@ -189,7 +192,7 @@ describe('OidcService', () => {
         email: 'new@gmail.com',
       } as any);
 
-      const result = await service.handleCallback('google', 'auth-code', 'state');
+      const result = await service.handleCallback('google', 'auth-code', 'valid-state');
 
       expect(usersService.create).toHaveBeenCalled();
       expect(result.tokens.accessToken).toBe('access-token');
@@ -198,7 +201,9 @@ describe('OidcService', () => {
     it('should throw UnauthorizedException when no sub in claims', async () => {
       vi.mocked(mockProvider.handleCallback).mockResolvedValue({ sub: '' } as OidcClaims);
 
-      await expect(service.handleCallback('google', 'auth-code', 'state')).rejects.toThrow(UnauthorizedException);
+      await expect(service.handleCallback('google', 'auth-code', 'valid-state')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should find existing user by email', async () => {
@@ -214,10 +219,33 @@ describe('OidcService', () => {
       vi.mocked(usersService.findByEmail).mockResolvedValue(mockUser as any);
       vi.mocked(usersService.updateProfile).mockResolvedValue(mockUser as any);
 
-      const result = await service.handleCallback('google', 'auth-code', 'state');
+      const result = await service.handleCallback('google', 'auth-code', 'valid-state');
 
       expect(usersService.updateProfile).toHaveBeenCalled();
       expect(result.tokens.accessToken).toBe('access-token');
+    });
+
+    it('should throw UnauthorizedException when the state has not been issued', async () => {
+      vi.mocked(mockProvider.handleCallback).mockClear();
+
+      await expect(service.handleCallback('google', 'auth-code', 'unissued-state')).rejects.toThrow(
+        UnauthorizedException,
+      );
+
+      expect(mockProvider.handleCallback).not.toHaveBeenCalled();
+    });
+
+    it('should reject a state that has already been consumed', async () => {
+      service.getAuthorizationUrl('google', 'consumed-state');
+
+      vi.mocked(mockProvider.handleCallback).mockResolvedValue({ sub: 'google-sub-123' } as OidcClaims);
+      vi.mocked(usersService.findById).mockResolvedValue(mockUser as any);
+      vi.mocked(usersService.updateProfile).mockResolvedValue(mockUser as any);
+
+      await service.handleCallback('google', 'auth-code', 'consumed-state');
+      await expect(service.handleCallback('google', 'auth-code', 'consumed-state')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 

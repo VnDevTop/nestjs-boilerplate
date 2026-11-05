@@ -40,6 +40,14 @@ const PROVIDER_FACTORIES: Record<string, (config: OidcProviderConfig) => any> = 
 export class OidcService {
   private readonly logger = new Logger(OidcService.name);
 
+  /**
+   * In-memory store mapping issued OIDC states to their expiry timestamps.
+   * Used to validate the CSRF state on callback (single-use).
+   */
+  private readonly states = new Map<string, number>();
+
+  private static readonly STATE_TTL_MS = 10 * 60 * 1000;
+
   constructor(
     private readonly configService: ConfigService,
     private readonly oidcRegistry: OidcProviderRegistry,
@@ -111,6 +119,7 @@ export class OidcService {
    */
   getAuthorizationUrl(providerName: string, state: string, redirectUri?: string): string {
     const provider = this.getProvider(providerName);
+    this.states.set(state, Date.now() + OidcService.STATE_TTL_MS);
     return provider.getAuthorizationUrl(state, redirectUri);
   }
 
@@ -128,6 +137,11 @@ export class OidcService {
     const provider = this.getProvider(providerName);
 
     this.logger.log(`Handling OIDC callback for provider: ${provider.name}`);
+
+    if (!this.consumeState(state)) {
+      this.logger.warn(`OIDC callback rejected: invalid or expired state (provider: ${provider.name})`);
+      throw new UnauthorizedException('Invalid OIDC state');
+    }
 
     // Exchange code for tokens and fetch user profile
     const claims = await provider.handleCallback(code, state, redirectUri);
@@ -155,6 +169,24 @@ export class OidcService {
     };
 
     return { user: requestUser, tokens };
+  }
+
+  /**
+   * Validates and consumes a one-time OIDC state.
+   *
+   * @param state - The state parameter received on callback.
+   * @returns True if the state is valid and single-use, otherwise false.
+   */
+  private consumeState(state: string): boolean {
+    const expiresAt = this.states.get(state);
+
+    if (expiresAt === undefined || expiresAt < Date.now()) {
+      this.states.delete(state);
+      return false;
+    }
+
+    this.states.delete(state);
+    return true;
   }
 
   /**

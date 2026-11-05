@@ -10,6 +10,7 @@ jobs:
   test:
     name: Unit and e2e tests
     runs-on: ubuntu-latest
+    environment: test
 
     services:
       postgres:
@@ -40,6 +41,10 @@ jobs:
       DATABASE_URL: postgres://test:test@localhost:5432/test
       REDIS_URL: redis://localhost:6379
       NODE_ENV: test
+      OIDC_GOOGLE_CLIENT_ID: ${{ secrets.OIDC_GOOGLE_CLIENT_ID }}
+      OIDC_GOOGLE_CLIENT_SECRET: ${{ secrets.OIDC_GOOGLE_CLIENT_SECRET }}
+      OIDC_GITHUB_CLIENT_ID: ${{ secrets.OIDC_GITHUB_CLIENT_ID }}
+      OIDC_GITHUB_CLIENT_SECRET: ${{ secrets.OIDC_GITHUB_CLIENT_SECRET }}
 
     steps:
       - name: Checkout
