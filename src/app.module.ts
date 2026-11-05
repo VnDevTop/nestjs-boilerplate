@@ -22,6 +22,7 @@ import {
   i18nConfig,
   jwtConfig,
   mailConfig,
+  oidcConfig,
   observeConfig,
   queueConfig,
   retentionConfig,
@@ -40,7 +41,7 @@ export const {ObserveModule, ObserveInstrument} = createObserveModule();
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [appConfig, observeConfig, cacheConfig, corsConfig, databaseConfig, swaggerConfig, i18nConfig, jwtConfig, queueConfig, retentionConfig, mailConfig, throttleConfig],
+      load: [appConfig, observeConfig, cacheConfig, corsConfig, databaseConfig, swaggerConfig, i18nConfig, jwtConfig, oidcConfig, queueConfig, retentionConfig, mailConfig, throttleConfig],
       validate: validateEnv,
     }),
     // Distributed tracing, auto-correlated logs, request/job metrics, error
