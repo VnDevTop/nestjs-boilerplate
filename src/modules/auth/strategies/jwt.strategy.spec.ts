@@ -96,5 +96,18 @@ describe('JwtStrategy', () => {
         }),
       ).rejects.toThrow(UnauthorizedException);
     });
+
+    it('should return the mfaVerified flag from the payload', async () => {
+      vi.mocked(usersService.findById).mockResolvedValue(mockUser);
+
+      const result = await strategy.validate({
+        sub: 'user-1',
+        email: 'test@example.com',
+        roles: [Role.USER],
+        mfaVerified: true,
+      });
+
+      expect(result.mfaVerified).toBe(true);
+    });
   });
 });

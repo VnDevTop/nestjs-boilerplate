@@ -24,6 +24,9 @@ describe('AuthController', () => {
     verifyMagicLink: vi.fn(),
     requestPasscode: vi.fn(),
     verifyPasscode: vi.fn(),
+    requestDeviceCode: vi.fn(),
+    approveDevice: vi.fn(),
+    pollDevice: vi.fn(),
   };
 
   const mockAuthResult: AuthResult = {
@@ -243,6 +246,46 @@ describe('AuthController', () => {
         tokens: { accessToken: 'access-token', refreshToken: 'refresh-token', tokenType: 'Bearer' },
       });
       expect(mockAuthService.verifyPasscode).toHaveBeenCalledWith('123456');
+    });
+  });
+
+  describe('requestDeviceCode', () => {
+    it('should request a device authorization and return the response', async () => {
+      mockAuthService.requestDeviceCode.mockResolvedValue({
+        deviceCode: 'device-code-1',
+        userCode: 'ABCD-EFGH',
+        verificationUri: 'http://localhost:3000/auth/device/verify?user_code=ABCD-EFGH',
+        verificationUriComplete: 'http://localhost:3000/auth/device/verify?user_code=ABCD-EFGH&client_id=nestjs-device-client',
+        expiresIn: 900,
+        interval: 5,
+      });
+
+      const result = await controller.requestDeviceCode({ clientId: 'nestjs-device-client', scopes: ['openid'] });
+
+      expect(result.deviceCode).toBe('device-code-1');
+      expect(mockAuthService.requestDeviceCode).toHaveBeenCalledWith('nestjs-device-client', ['openid']);
+    });
+  });
+
+  describe('approveDevice', () => {
+    it('should approve a device and return the status', async () => {
+      mockAuthService.approveDevice.mockResolvedValue({ status: 'APPROVED' });
+
+      const result = await controller.approveDevice({ userCode: 'ABCD-EFGH' }, { sub: 'user-1', mfaVerified: true } as RequestUser);
+
+      expect(result).toEqual({ status: 'APPROVED' });
+      expect(mockAuthService.approveDevice).toHaveBeenCalledWith('ABCD-EFGH', { sub: 'user-1', mfaVerified: true });
+    });
+  });
+
+  describe('pollDevice', () => {
+    it('should poll the device and return the poll response', async () => {
+      mockAuthService.pollDevice.mockResolvedValue({ status: 'PENDING' });
+
+      const result = await controller.pollDevice({ deviceCode: 'device-code-1' });
+
+      expect(result).toEqual({ status: 'PENDING' });
+      expect(mockAuthService.pollDevice).toHaveBeenCalledWith('device-code-1');
     });
   });
 });
