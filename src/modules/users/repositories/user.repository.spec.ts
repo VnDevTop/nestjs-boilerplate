@@ -25,6 +25,7 @@ describe('UserRepository', () => {
     roles: [Role.USER],
     status: 'active' as any,
     totpEnabled: false,
+    loginTokenConsumed: false,
     createdAt: new Date('2024-01-01'),
     updatedAt: new Date('2024-01-01'),
     deletedAt: null,
