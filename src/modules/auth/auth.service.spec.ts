@@ -9,6 +9,7 @@ import { UsersService } from '../users/users.service.js';
 import { PasswordService } from './password.service.js';
 import { TotpService } from './totp.service.js';
 import { OneTimeTokenService } from './one-time-token.service.js';
+import { DeviceAuthorizationService } from './device-authorization.service.js';
 import { AuthMethod } from '../../common/enums/auth-method.enum.js';
 import { Role } from '../../common/enums/role.enum.js';
 import { User } from '../users/entities/user.entity.js';
@@ -29,6 +30,7 @@ describe('AuthService', () => {
   let totpService: TotpService;
   let mailerService: MailerService;
   let oneTimeTokenService: OneTimeTokenService;
+  let deviceAuthorizationService: DeviceAuthorizationService;
   
   const mockUser: User = {
     id: 'user-1',
@@ -102,6 +104,18 @@ describe('AuthService', () => {
             verifyToken: vi.fn(),
           },
         },
+        {
+          provide: DeviceAuthorizationService,
+          useValue: {
+            createAuthorization: vi.fn(),
+            findByDeviceCode: vi.fn(),
+            findByUserCode: vi.fn(),
+            approve: vi.fn(),
+            deny: vi.fn(),
+            isExpired: vi.fn(),
+            cleanupExpired: vi.fn(),
+          },
+        },
       ],
     }).compile();
     
@@ -112,6 +126,7 @@ describe('AuthService', () => {
     totpService = module.get<TotpService>(TotpService);
     mailerService = module.get<MailerService>(MailerService);
     oneTimeTokenService = module.get<OneTimeTokenService>(OneTimeTokenService);
+    deviceAuthorizationService = module.get<DeviceAuthorizationService>(DeviceAuthorizationService);
   });
   
   describe('register', () => {
