@@ -471,4 +471,28 @@ describe('AuthService', () => {
       await expect(service.setupMfa('user-1', 'test@example.com')).rejects.toThrow(NotFoundException);
     });
   });
+
+  describe('verifyMfaWithToken', () => {
+    it('should return tokens when mfa token and valid code verify', async () => {
+      vi.mocked(jwtService.verifyAsync).mockResolvedValue({ sub: 'user-1', type: 'mfa' });
+      vi.mocked(usersService.findByIdWithTotp).mockResolvedValue({ ...mockUser, totpSecret: 'JBSWY3DPEHPK3PXP' });
+      vi.mocked(totpService.verifyTotp).mockResolvedValue(true);
+      vi.mocked(jwtService.signAsync)
+        .mockResolvedValueOnce('access-token')
+        .mockResolvedValueOnce('refresh-token');
+
+      const result = await service.verifyMfaWithToken('mfa-token', '123456');
+
+      expect(result.enabled).toBe(true);
+      expect(result.tokens?.accessToken).toBe('access-token');
+      expect(result.tokens?.refreshToken).toBe('refresh-token');
+    });
+
+    it('should throw NotFoundException when user not found', async () => {
+      vi.mocked(jwtService.verifyAsync).mockResolvedValue({ sub: 'user-1', type: 'mfa' });
+      vi.mocked(usersService.findByIdWithTotp).mockResolvedValue(null);
+
+      await expect(service.verifyMfaWithToken('mfa-token', '123456')).rejects.toThrow(NotFoundException);
+    });
+  });
 });

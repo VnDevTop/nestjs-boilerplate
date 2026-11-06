@@ -19,6 +19,7 @@ describe('AuthController', () => {
     setupMfa: vi.fn(),
     verifyMfa: vi.fn(),
     disableMfa: vi.fn(),
+    verifyMfaWithToken: vi.fn(),
   };
 
   const mockAuthResult: AuthResult = {
@@ -157,6 +158,31 @@ describe('AuthController', () => {
 
       expect(result).toEqual({ enabled: true });
       expect(mockAuthService.disableMfa).toHaveBeenCalledWith('user-1', 'test@example.com', '123456');
+    });
+  });
+
+  describe('verifyLoginMfa', () => {
+    it('should verify totp challenge from login and return tokens', async () => {
+      mockAuthService.verifyMfaWithToken.mockResolvedValue({
+        enabled: true,
+        tokens: {
+          accessToken: 'access-token',
+          refreshToken: 'refresh-token',
+          tokenType: 'Bearer',
+        },
+      });
+
+      const result = await controller.verifyLoginMfa({ code: '123456', mfaToken: 'mfa-token' });
+
+      expect(result).toEqual({
+        enabled: true,
+        tokens: {
+          accessToken: 'access-token',
+          refreshToken: 'refresh-token',
+          tokenType: 'Bearer',
+        },
+      });
+      expect(mockAuthService.verifyMfaWithToken).toHaveBeenCalledWith('mfa-token', '123456');
     });
   });
 });
