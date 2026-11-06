@@ -1,6 +1,5 @@
 import { UnauthorizedException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { createHash } from 'node:crypto';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
 import { OneTimeTokenService } from './one-time-token.service.js';
@@ -59,7 +58,7 @@ describe('OneTimeTokenService', () => {
       expect(token).toBeDefined();
       expect(expiresAt).toBeInstanceOf(Date);
       expect(usersService.updateProfile).toHaveBeenCalledWith('user-1', {
-        loginTokenHash: createHash('sha256').update(token).digest('hex'),
+        loginTokenHash: await service.hashToken(token),
         loginTokenExpiresAt: expiresAt,
         loginTokenConsumed: false,
       });
@@ -71,7 +70,7 @@ describe('OneTimeTokenService', () => {
       expect(token).toMatch(/^\d{6}$/);
       expect(usersService.updateProfile).toHaveBeenCalledWith(
         'user-1',
-        expect.objectContaining({ loginTokenHash: createHash('sha256').update(token).digest('hex') }),
+        expect.objectContaining({ loginTokenHash: await service.hashToken(token) }),
       );
     });
   });

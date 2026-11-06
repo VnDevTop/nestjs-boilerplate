@@ -87,7 +87,7 @@ export class UserRepository {
    * Finds a user by their hashed one-time login token.
    *
    * Used by the one-time login token verification flows (magic link /
-   * passcode) where the opaque token is resolved through its SHA-256 hash.
+   * passcode) where the opaque token is resolved through its Argon2id hash.
    *
    * @param loginTokenHash - Hashed one-time login token.
    * @returns The matching user, or null if no token matches.

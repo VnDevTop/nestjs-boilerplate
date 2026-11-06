@@ -5,10 +5,10 @@ import { App } from 'supertest/types.js';
 import { TOTP } from '@otplib/totp';
 import { NodeCryptoPlugin } from '@otplib/plugin-crypto-node';
 import { ScureBase32Plugin } from '@otplib/plugin-base32-scure';
-import { createHash } from 'node:crypto';
 import { MailerService } from '@nestjs-modules/mailer';
 import { vi } from 'vitest';
 import { UsersService } from '../src/modules/users/users.service.js';
+import { OneTimeTokenService } from '../src/modules/auth/one-time-token.service.js';
 import { AppModule } from './../src/app.module.js';
 
 const sendMailMock = vi.fn();
@@ -253,12 +253,13 @@ describe('AuthController (e2e)', () => {
       expect(requestRes.body).toHaveProperty('success');
 
       const usersService = moduleFixture.get<UsersService>(UsersService);
+      const oneTimeTokenService = moduleFixture.get<OneTimeTokenService>(OneTimeTokenService);
       const user = await usersService.findByEmail(email);
       if (!user) {
         throw new Error('User not found after registration');
       }
       await usersService.updateProfile(user.id, {
-        loginTokenHash: createHash('sha256').update(magicToken).digest('hex'),
+        loginTokenHash: await oneTimeTokenService.hashToken(magicToken),
         loginTokenExpiresAt: new Date(Date.now() + 60 * 1000),
         loginTokenConsumed: false,
       });
@@ -287,12 +288,13 @@ describe('AuthController (e2e)', () => {
 
       const passcode = String(Math.floor(100000 + Math.random() * 900000));
       const usersService = moduleFixture.get<UsersService>(UsersService);
+      const oneTimeTokenService = moduleFixture.get<OneTimeTokenService>(OneTimeTokenService);
       const user = await usersService.findByEmail(email);
       if (!user) {
         throw new Error('User not found after registration');
       }
       await usersService.updateProfile(user.id, {
-        loginTokenHash: createHash('sha256').update(passcode).digest('hex'),
+        loginTokenHash: await oneTimeTokenService.hashToken(passcode),
         loginTokenExpiresAt: new Date(Date.now() + 60 * 1000),
         loginTokenConsumed: false,
       });
