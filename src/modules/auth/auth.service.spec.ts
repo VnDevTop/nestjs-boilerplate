@@ -9,6 +9,7 @@ import { UsersService } from '../users/users.service.js';
 import { PasswordService } from './password.service.js';
 import { TotpService } from './totp.service.js';
 import { OneTimeTokenService } from './one-time-token.service.js';
+import { AuthMethod } from '../../common/enums/auth-method.enum.js';
 import { Role } from '../../common/enums/role.enum.js';
 import { User } from '../users/entities/user.entity.js';
 
@@ -26,6 +27,8 @@ describe('AuthService', () => {
   let passwordService: PasswordService;
   let jwtService: JwtService;
   let totpService: TotpService;
+  let mailerService: MailerService;
+  let oneTimeTokenService: OneTimeTokenService;
 
   const mockUser: User = {
     id: 'user-1',
@@ -107,6 +110,8 @@ describe('AuthService', () => {
     passwordService = module.get<PasswordService>(PasswordService);
     jwtService = module.get<JwtService>(JwtService);
     totpService = module.get<TotpService>(TotpService);
+    mailerService = module.get<MailerService>(MailerService);
+    oneTimeTokenService = module.get<OneTimeTokenService>(OneTimeTokenService);
   });
 
   describe('register', () => {
@@ -509,6 +514,101 @@ describe('AuthService', () => {
       vi.mocked(usersService.findByIdWithTotp).mockResolvedValue(null);
 
       await expect(service.verifyMfaWithToken('mfa-token', '123456')).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('requestMagicLink', () => {
+    it('should send magic link email when user exists and return generic success', async () => {
+      vi.mocked(usersService.findByEmail).mockResolvedValue(mockUser);
+      vi.mocked(oneTimeTokenService.createToken).mockResolvedValue({ token: 'magic-token', expiresAt: new Date() });
+
+      const result = await service.requestMagicLink('test@example.com');
+
+      expect(result).toEqual({ success: true });
+      expect(oneTimeTokenService.createToken).toHaveBeenCalledWith('user-1', 'MAGIC_LINK');
+      expect(mailerService.sendMail).toHaveBeenCalledWith(expect.objectContaining({ to: 'test@example.com' }));
+    });
+
+    it('should return generic success when user does not exist', async () => {
+      vi.mocked(usersService.findByEmail).mockResolvedValue(null);
+
+      const result = await service.requestMagicLink('unknown@example.com');
+
+      expect(result).toEqual({ success: true });
+      expect(oneTimeTokenService.createToken).not.toHaveBeenCalled();
+      expect(mailerService.sendMail).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('verifyMagicLink', () => {
+    it('should issue tokens when magic link is valid and user has no totp', async () => {
+      vi.mocked(oneTimeTokenService.verifyToken).mockResolvedValue({ userId: 'user-1', authMethod: AuthMethod.MAGIC_LINK });
+      vi.mocked(usersService.findById).mockResolvedValue(mockUser);
+      vi.mocked(jwtService.signAsync).mockResolvedValueOnce('access-token').mockResolvedValueOnce('refresh-token');
+
+      const result = await service.verifyMagicLink('magic-token');
+
+      expect(result.tokens?.accessToken).toBe('access-token');
+      expect(result.tokens?.refreshToken).toBe('refresh-token');
+      expect(result.user.sub).toBe('user-1');
+    });
+
+    it('should return mfaRequired and mfaToken when user has totp enabled', async () => {
+      vi.mocked(oneTimeTokenService.verifyToken).mockResolvedValue({ userId: 'user-1', authMethod: AuthMethod.MAGIC_LINK });
+      vi.mocked(usersService.findById).mockResolvedValue({ ...mockUser, totpEnabled: true });
+      vi.mocked(jwtService.signAsync).mockResolvedValue('mfa-token');
+
+      const result = await service.verifyMagicLink('magic-token');
+
+      expect(result.mfaRequired).toBe(true);
+      expect(result.mfaToken).toBe('mfa-token');
+    });
+  });
+
+  describe('requestPasscode', () => {
+    it('should send passcode email when user exists and return generic success', async () => {
+      vi.mocked(usersService.findByEmail).mockResolvedValue(mockUser);
+      vi.mocked(oneTimeTokenService.createToken).mockResolvedValue({ token: '123456', expiresAt: new Date() });
+
+      const result = await service.requestPasscode('test@example.com');
+
+      expect(result).toEqual({ success: true });
+      expect(oneTimeTokenService.createToken).toHaveBeenCalledWith('user-1', 'PASSCODE');
+      expect(mailerService.sendMail).toHaveBeenCalledWith(expect.objectContaining({ to: 'test@example.com' }));
+    });
+
+    it('should return generic success when user does not exist', async () => {
+      vi.mocked(usersService.findByEmail).mockResolvedValue(null);
+
+      const result = await service.requestPasscode('unknown@example.com');
+
+      expect(result).toEqual({ success: true });
+      expect(mailerService.sendMail).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('verifyPasscode', () => {
+    it('should issue tokens when passcode is valid and user has no totp', async () => {
+      vi.mocked(oneTimeTokenService.verifyToken).mockResolvedValue({ userId: 'user-1', authMethod: AuthMethod.MAGIC_LINK });
+      vi.mocked(usersService.findById).mockResolvedValue(mockUser);
+      vi.mocked(jwtService.signAsync).mockResolvedValueOnce('access-token').mockResolvedValueOnce('refresh-token');
+
+      const result = await service.verifyPasscode('123456');
+
+      expect(result.tokens?.accessToken).toBe('access-token');
+      expect(result.tokens?.refreshToken).toBe('refresh-token');
+      expect(oneTimeTokenService.verifyToken).toHaveBeenCalledWith('123456');
+    });
+
+    it('should return mfaRequired and mfaToken when user has totp enabled', async () => {
+      vi.mocked(oneTimeTokenService.verifyToken).mockResolvedValue({ userId: 'user-1', authMethod: AuthMethod.MAGIC_LINK });
+      vi.mocked(usersService.findById).mockResolvedValue({ ...mockUser, totpEnabled: true });
+      vi.mocked(jwtService.signAsync).mockResolvedValue('mfa-token');
+
+      const result = await service.verifyPasscode('123456');
+
+      expect(result.mfaRequired).toBe(true);
+      expect(result.mfaToken).toBe('mfa-token');
     });
   });
 });

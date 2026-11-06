@@ -20,6 +20,10 @@ describe('AuthController', () => {
     verifyMfa: vi.fn(),
     disableMfa: vi.fn(),
     verifyMfaWithToken: vi.fn(),
+    requestMagicLink: vi.fn(),
+    verifyMagicLink: vi.fn(),
+    requestPasscode: vi.fn(),
+    verifyPasscode: vi.fn(),
   };
 
   const mockAuthResult: AuthResult = {
@@ -183,6 +187,62 @@ describe('AuthController', () => {
         },
       });
       expect(mockAuthService.verifyMfaWithToken).toHaveBeenCalledWith('mfa-token', '123456');
+    });
+  });
+
+  describe('requestMagicLink', () => {
+    it('should request magic link and return the success response', async () => {
+      mockAuthService.requestMagicLink.mockResolvedValue({ success: true });
+
+      const result = await controller.requestMagicLink({ email: 'test@example.com' });
+
+      expect(result).toEqual({ success: true });
+      expect(mockAuthService.requestMagicLink).toHaveBeenCalledWith('test@example.com');
+    });
+  });
+
+  describe('verifyMagicLink', () => {
+    it('should verify magic link and return the auth result', async () => {
+      mockAuthService.verifyMagicLink.mockResolvedValue({
+        user: { sub: 'user-1', email: 'test@example.com' },
+        tokens: { accessToken: 'access-token', refreshToken: 'refresh-token', tokenType: 'Bearer' },
+      });
+
+      const result = await controller.verifyMagicLink({ token: 'magic-token' });
+
+      expect(result).toEqual({
+        user: { sub: 'user-1', email: 'test@example.com' },
+        tokens: { accessToken: 'access-token', refreshToken: 'refresh-token', tokenType: 'Bearer' },
+      });
+      expect(mockAuthService.verifyMagicLink).toHaveBeenCalledWith('magic-token');
+    });
+  });
+
+  describe('requestPasscode', () => {
+    it('should request passcode and return the success response', async () => {
+      mockAuthService.requestPasscode.mockResolvedValue({ success: true });
+
+      const result = await controller.requestPasscode({ email: 'test@example.com' });
+
+      expect(result).toEqual({ success: true });
+      expect(mockAuthService.requestPasscode).toHaveBeenCalledWith('test@example.com');
+    });
+  });
+
+  describe('verifyPasscode', () => {
+    it('should verify passcode and return the auth result', async () => {
+      mockAuthService.verifyPasscode.mockResolvedValue({
+        user: { sub: 'user-1', email: 'test@example.com' },
+        tokens: { accessToken: 'access-token', refreshToken: 'refresh-token', tokenType: 'Bearer' },
+      });
+
+      const result = await controller.verifyPasscode({ code: '123456' });
+
+      expect(result).toEqual({
+        user: { sub: 'user-1', email: 'test@example.com' },
+        tokens: { accessToken: 'access-token', refreshToken: 'refresh-token', tokenType: 'Bearer' },
+      });
+      expect(mockAuthService.verifyPasscode).toHaveBeenCalledWith('123456');
     });
   });
 });

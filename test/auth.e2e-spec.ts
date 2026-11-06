@@ -5,15 +5,23 @@ import { App } from 'supertest/types.js';
 import { TOTP } from '@otplib/totp';
 import { NodeCryptoPlugin } from '@otplib/plugin-crypto-node';
 import { ScureBase32Plugin } from '@otplib/plugin-base32-scure';
+import { createHash } from 'node:crypto';
+import { MailerService } from '@nestjs-modules/mailer';
+import { vi } from 'vitest';
+import { UsersService } from '../src/modules/users/users.service.js';
 import { AppModule } from './../src/app.module.js';
 
 describe('AuthController (e2e)', () => {
   let app: INestApplication<App>;
+  let moduleFixture: TestingModule;
 
   beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
+    moduleFixture = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(MailerService)
+      .useValue({ sendMail: vi.fn() })
+      .compile();
 
     app = moduleFixture.createNestApplication();
     await app.init();
@@ -223,6 +231,76 @@ describe('AuthController (e2e)', () => {
         .get('/users/me')
         .set('Authorization', `Bearer ${mfaVerifyRes.body.tokens.accessToken}`);
       expect(meRes.status).toBe(200);
+    });
+  });
+
+  describe('POST /auth/magic-link (e2e - magic link flow)', () => {
+    it('should request magic link, verify token and complete login', async () => {
+      const email = `e2e-magic-${Date.now()}@example.com`;
+
+      const registerRes = await request(app.getHttpServer())
+        .post('/auth/register')
+        .send({ email, password: 'password123', name: 'Magic User' });
+      expect(registerRes.status).toBe(201);
+
+      const requestRes = await request(app.getHttpServer())
+        .post('/auth/magic-link/request')
+        .send({ email });
+      expect(requestRes.status).toBe(200);
+      expect(requestRes.body).toHaveProperty('success');
+
+      const mailer = moduleFixture.get<MailerService>(MailerService);
+      expect(mailer.sendMail).toHaveBeenCalled();
+
+      const usersService = moduleFixture.get<UsersService>(UsersService);
+      const user = await usersService.findByEmail(email);
+      if (!user) {
+        throw new Error('User not found after registration');
+      }
+      await usersService.updateProfile(user.sub, {
+        loginTokenHash: createHash('sha256').update('e2e-magic-token').digest('hex'),
+        loginTokenExpiresAt: new Date(Date.now() + 60 * 1000),
+        loginTokenConsumed: false,
+      });
+
+      const verifyRes = await request(app.getHttpServer())
+        .post('/auth/magic-link/verify')
+        .send({ token: 'e2e-magic-token' });
+      expect(verifyRes.status).toBe(200);
+      expect(verifyRes.body).toHaveProperty('tokens');
+
+      const meRes = await request(app.getHttpServer())
+        .get('/users/me')
+        .set('Authorization', `Bearer ${verifyRes.body.tokens.accessToken}`);
+      expect(meRes.status).toBe(200);
+    });
+  });
+
+  describe('POST /auth/passcode (e2e - passcode flow)', () => {
+    it('should verify passcode and complete login', async () => {
+      const email = `e2e-passcode-${Date.now()}@example.com`;
+
+      const registerRes = await request(app.getHttpServer())
+        .post('/auth/register')
+        .send({ email, password: 'password123', name: 'Passcode User' });
+      expect(registerRes.status).toBe(201);
+
+      const usersService = moduleFixture.get<UsersService>(UsersService);
+      const user = await usersService.findByEmail(email);
+      if (!user) {
+        throw new Error('User not found after registration');
+      }
+      await usersService.updateProfile(user.sub, {
+        loginTokenHash: createHash('sha256').update('654321').digest('hex'),
+        loginTokenExpiresAt: new Date(Date.now() + 60 * 1000),
+        loginTokenConsumed: false,
+      });
+
+      const verifyRes = await request(app.getHttpServer())
+        .post('/auth/passcode/verify')
+        .send({ code: '654321' });
+      expect(verifyRes.status).toBe(200);
+      expect(verifyRes.body).toHaveProperty('tokens');
     });
   });
 });
