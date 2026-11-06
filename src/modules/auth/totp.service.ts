@@ -70,12 +70,18 @@ export class TotpService {
    */
   generateBackupCodes(): string[] {
     const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+    const alphabetLength = alphabet.length;
+    const maxUnbiased = Math.floor(256 / alphabetLength) * alphabetLength;
+
     const codes = new Set<string>();
     while (codes.size < 10) {
-      const bytes = randomBytes(8);
       let code = '';
-      for (let i = 0; i < 8; i += 1) {
-        code += alphabet[bytes[i] % alphabet.length];
+      while (code.length < 8) {
+        const byte = randomBytes(1)[0];
+        if (byte >= maxUnbiased) {
+          continue;
+        }
+        code += alphabet[byte % alphabetLength];
       }
       codes.add(code);
     }
