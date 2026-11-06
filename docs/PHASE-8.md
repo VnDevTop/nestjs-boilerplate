@@ -124,6 +124,40 @@ abstraction layer, registry for multi-provider support, and setup documentation.
 9. `docs(auth): add oidc provider setup guide`
    - Created `docs/OIDC-PROVIDER-SETUP.md` with step-by-step setup for all 6 providers.
 
+### Phase 8.3 — Advanced security
+
+#### Task 2 — `feat(auth): add passcode / magic link login`
+
+1. `feat(users): add one-time login token storage fields`
+   - Added `loginTokenHash`, `loginTokenExpiresAt` and `loginTokenConsumed` columns to the `User` entity, with TypeORM migration `1791283200000-add-one-time-login-token-columns.ts`, for hashed one-time token storage (Option B).
+
+2. `feat(auth): add one-time login token service`
+   - Added `OneTimeTokenService` generating hashed one-time tokens (magic link / passcode), persisting expiry and enforcing single-use consumption.
+
+3. `feat(auth): add magic link login flow`
+   - Added `POST /auth/magic-link/request` and `POST /auth/magic-link/verify` (public, throttled).
+   - Magic link is delivered by email via `MailerService`; verify consumes the one-time token and completes login (MFA enforced when TOTP is enabled).
+
+4. `feat(auth): add email passcode login flow`
+   - Added `POST /auth/passcode/request` and `POST /auth/passcode/verify` (public, throttled).
+   - Passcode is delivered by email and verified as a single-use hashed token.
+
+#### Validation
+
+```bash
+npm run lint
+npx tsc --noEmit
+npm run build
+npm test
+npm run test:e2e
+```
+
+#### Docs deliverable
+
+- `docs/PHASE-8.md` (this file).
+
+---
+
 ### Phase 8.3 — E2E tests, OIDC subject lookup & seed data
 
 1. `fix(auth): prefix oidc sub with provider identifier for traceability`
