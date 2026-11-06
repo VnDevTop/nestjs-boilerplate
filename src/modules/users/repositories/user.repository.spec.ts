@@ -198,6 +198,26 @@ describe('UserRepository', () => {
     });
   });
 
+  describe('findByLoginTokenHash', () => {
+    it('should find user by login token hash', async () => {
+      vi.mocked(mockRepository.findOne).mockResolvedValue(mockUser);
+
+      const result = await repository.findByLoginTokenHash('hashed-token');
+
+      expect(result).toEqual(mockUser);
+      expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { loginTokenHash: 'hashed-token' } });
+    });
+
+    it('should return null when user not found by login token hash', async () => {
+      vi.mocked(mockRepository.findOne).mockResolvedValue(null);
+
+      const result = await repository.findByLoginTokenHash('invalid-token');
+
+      expect(result).toBeNull();
+      expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { loginTokenHash: 'invalid-token' } });
+    });
+  });
+
   describe('create', () => {
     it('should create and save a new user', async () => {
       const createData = { email: 'new@example.com', sub: 'sub-456' } as Partial<User>;
