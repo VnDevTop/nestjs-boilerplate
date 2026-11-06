@@ -1,5 +1,6 @@
 import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 
 import { Public } from '../../common/decorators/public.decorator.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
@@ -52,6 +53,33 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Invalid refresh token' })
   async refresh(@Body() body: { refreshToken: string }) {
     return this.authService.refreshTokens(body.refreshToken);
+  }
+
+  /**
+   * Requests a magic link login token for the given email address.
+   */
+  @Public()
+  @Post('magic-link/request')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @ApiOperation({ summary: 'Request magic link login token' })
+  @ApiResponse({ status: 200, description: 'Magic link sent or silently skipped for unknown email' })
+  async requestMagicLink(@Body() body: { email: string }) {
+    return this.authService.requestMagicLink(body.email);
+  }
+
+  /**
+   * Verifies a magic link token and completes the login flow.
+   */
+  @Public()
+  @Post('magic-link/verify')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @ApiOperation({ summary: 'Verify magic link token and complete login' })
+  @ApiResponse({ status: 200, description: 'Authentication successful' })
+  @ApiResponse({ status: 401, description: 'Invalid or expired magic link token' })
+  async verifyMagicLink(@Body() body: { token: string }) {
+    return this.authService.verifyMagicLink(body.token);
   }
 
   /**

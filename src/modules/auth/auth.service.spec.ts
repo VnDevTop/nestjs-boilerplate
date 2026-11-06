@@ -1,12 +1,14 @@
 import { ConflictException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
+import { MailerService } from '@nestjs-modules/mailer';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
 import { AuthService } from './auth.service.js';
 import { UsersService } from '../users/users.service.js';
 import { PasswordService } from './password.service.js';
 import { TotpService } from './totp.service.js';
+import { OneTimeTokenService } from './one-time-token.service.js';
 import { Role } from '../../common/enums/role.enum.js';
 import { User } from '../users/entities/user.entity.js';
 
@@ -82,6 +84,19 @@ describe('AuthService', () => {
             generateUri: vi.fn(),
             verifyTotp: vi.fn(),
             generateBackupCodes: vi.fn(),
+          },
+        },
+        {
+          provide: MailerService,
+          useValue: {
+            sendMail: vi.fn(),
+          },
+        },
+        {
+          provide: OneTimeTokenService,
+          useValue: {
+            createToken: vi.fn(),
+            verifyToken: vi.fn(),
           },
         },
       ],
