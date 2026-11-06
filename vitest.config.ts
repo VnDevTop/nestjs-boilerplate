@@ -16,7 +16,7 @@ export default defineConfig({
         functions: 80,
         // Branch coverage of decorator-heavy files is currently lower; raise in later phases.
         branches: 50,
-        statements: 80,
+        statements: 100,
       },
     },
   },

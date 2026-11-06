@@ -1,3 +1,4 @@
+import { AuthMethod } from '../enums/auth-method.enum.js';
 import { Role } from '../enums/role.enum.js';
 
 /**
@@ -20,4 +21,8 @@ export interface JwtPayload {
   jti?: string;
   /** Token type. */
   type?: string;
+  /** Whether the user completed multi-factor authentication (MFA). */
+  mfaVerified?: boolean;
+  /** The authentication method used to issue the token (e.g. PASSWORD, OIDC, MFA). */
+  authMethod?: AuthMethod;
 }

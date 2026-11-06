@@ -1,5 +1,7 @@
-import { ConflictException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { toDataURL } from 'qrcode';
+import { TotpService } from './totp.service.js';
 
 import { UsersService } from '../users/users.service.js';
 import { PasswordService } from './password.service.js';
@@ -27,6 +29,7 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly passwordService: PasswordService,
     private readonly jwtService: JwtService,
+    private readonly totpService: TotpService,
   ) {}
 
   /**
@@ -53,6 +56,24 @@ export class AuthService {
       expiresIn: 15 * 60, // 15 minutes in seconds
       tokenType: 'Bearer',
     };
+  }
+
+  /**
+   * Issues a short-lived MFA challenge token for users with TOTP enabled.
+   *
+   * @param user - User entity.
+   * @returns Signed MFA challenge token.
+   */
+  async issueMfaToken(user: User): Promise<string> {
+    return this.jwtService.signAsync(
+      {
+        sub: user.id,
+        email: user.email,
+        roles: user.roles as any,
+        type: 'mfa',
+      },
+      { expiresIn: '10m' },
+    );
   }
 
   /**
@@ -166,6 +187,11 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
+    if (user.totpEnabled) {
+      const mfaToken = await this.issueMfaToken(user);
+      return { user: requestUser, mfaRequired: true, mfaToken };
+    }
+
     const tokens = await this.issueTokens({
       sub: user.id,
       email: user.email,
@@ -173,6 +199,143 @@ export class AuthService {
     });
 
     return { user: requestUser, tokens };
+  }
+
+  /**
+   * Sets up TOTP for an authenticated user and returns the provisioning URI and QR code.
+   *
+   * @param userId - User ID (internal identifier).
+   * @param email - User email used as the TOTP label.
+   * @returns The TOTP secret, otpauth URI and QR code.
+   */
+  async setupMfa(userId: string, email: string): Promise<{ secret: string; otpauthUrl: string; qrCode: string }> {
+    const user = await this.usersService.findByIdWithTotp(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const secret = this.totpService.generateSecret();
+    const otpauthUrl = this.totpService.generateUri(secret, email);
+
+    await this.usersService.updateProfile(userId, { totpSecret: secret, totpEnabled: false });
+
+    const qrCode = await toDataURL(otpauthUrl);
+
+    return { secret, otpauthUrl, qrCode };
+  }
+
+  /**
+   * Verifies a TOTP code and enables two-factor authentication if valid.
+   *
+   * @param userId - User ID (internal identifier).
+   * @param email - User email used as the TOTP label.
+   * @param code - The user submitted TOTP code.
+   * @returns True when MFA was enabled, false otherwise.
+   */
+  async verifyMfa(
+    userId: string,
+    email: string,
+    code: string,
+    mfaToken?: string,
+  ): Promise<{ enabled: boolean; tokens?: TokenPair }> {
+    const user = await this.usersService.findByIdWithTotp(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (mfaToken) {
+      return this.verifyMfaWithToken(mfaToken, code);
+    }
+
+    const secret = user.totpSecret;
+    if (!secret) {
+      return { enabled: false };
+    }
+
+    const valid = await this.totpService.verifyTotp(code, secret);
+    if (!valid) {
+      return { enabled: false };
+    }
+
+    await this.usersService.updateProfile(userId, {
+      totpSecret: secret,
+      totpEnabled: true,
+      backupCodes: this.totpService.generateBackupCodes(),
+    });
+
+    return { enabled: true };
+  }
+
+  /**
+   * Verifies the MFA challenge token issued during login and exchanges it
+   * for a fully authenticated token pair.
+   *
+   * @param mfaToken - Pending MFA challenge token issued at login.
+   * @param code - The user submitted TOTP code.
+   * @returns MFA status and, when verified, the issued token pair.
+   */
+  async verifyMfaWithToken(mfaToken: string, code: string): Promise<{ enabled: boolean; tokens?: TokenPair }> {
+    const payload = await this.jwtService.verifyAsync(mfaToken, { secret: jwtConfig().secret });
+    if (payload.type !== 'mfa') {
+      throw new UnauthorizedException('Invalid MFA token');
+    }
+
+    const user = await this.usersService.findByIdWithTotp(payload.sub);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const secret = user.totpSecret;
+    if (!secret) {
+      return { enabled: false };
+    }
+
+    const valid = await this.totpService.verifyTotp(code, secret);
+    if (!valid) {
+      return { enabled: false };
+    }
+
+    const tokens = await this.issueTokens({
+      sub: user.id,
+      email: user.email,
+      roles: user.roles as any,
+      mfaVerified: true,
+    });
+
+    return { enabled: true, tokens };
+  }
+
+  /**
+   * Disables two-factor authentication after verifying a valid TOTP code.
+   *
+   * @param userId - User ID (internal identifier).
+   * @param email - User email used as the TOTP label.
+   * @param code - The user submitted TOTP code.
+   * @returns True when MFA was disabled, false otherwise.
+   */
+  async disableMfa(userId: string, email: string, code: string): Promise<{ enabled: boolean }> {
+    const user = await this.usersService.findByIdWithTotp(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const secret = user.totpSecret;
+    if (!secret) {
+      return { enabled: false };
+    }
+
+    const valid = await this.totpService.verifyTotp(code, secret);
+    if (!valid) {
+      return { enabled: false };
+    }
+
+    await this.usersService.updateProfile(userId, {
+      totpSecret: null,
+      totpEnabled: false,
+      backupCodes: null,
+    });
+
+    return { enabled: true };
   }
 
   /**

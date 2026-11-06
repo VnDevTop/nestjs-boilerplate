@@ -41,6 +41,10 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       throw new UnauthorizedException('Refresh tokens cannot be used for authentication');
     }
 
+    if (payload.type === 'mfa') {
+      throw new UnauthorizedException('MFA tokens cannot be used for authentication');
+    }
+
     const user = await this.usersService.findById(payload.sub);
     if (!user) {
       throw new UnauthorizedException('User not found');

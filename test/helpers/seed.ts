@@ -50,7 +50,7 @@ export async function seedUser(
     tokens = (await authService.login(credentials.email, credentials.password)).tokens;
   }
 
-  return { userId, tokens };
+  return { userId, tokens: tokens as TokenPair };
 }
 
 /**

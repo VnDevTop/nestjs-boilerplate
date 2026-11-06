@@ -23,6 +23,7 @@ describe('JwtStrategy', () => {
     locale: 'en',
     roles: [Role.USER],
     status: 'active' as any,
+    totpEnabled: false,
     createdAt: new Date('2024-01-01'),
     updatedAt: new Date('2024-01-01'),
     deletedAt: null,
@@ -68,6 +69,17 @@ describe('JwtStrategy', () => {
           email: 'test@example.com',
           roles: [Role.USER],
           type: 'refresh',
+        }),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should throw UnauthorizedException for mfa token', async () => {
+      await expect(
+        strategy.validate({
+          sub: 'user-1',
+          email: 'test@example.com',
+          roles: [Role.USER],
+          type: 'mfa',
         }),
       ).rejects.toThrow(UnauthorizedException);
     });

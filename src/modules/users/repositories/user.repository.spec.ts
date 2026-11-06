@@ -24,6 +24,7 @@ describe('UserRepository', () => {
     locale: 'en',
     roles: [Role.USER],
     status: 'active' as any,
+    totpEnabled: false,
     createdAt: new Date('2024-01-01'),
     updatedAt: new Date('2024-01-01'),
     deletedAt: null,
@@ -89,6 +90,37 @@ describe('UserRepository', () => {
 
       expect(result).toBeNull();
       expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { id: 'non-existent' } });
+    });
+  });
+
+  describe('findByIdWithTotp', () => {
+    it('should find user by id including totp secret', async () => {
+      const queryBuilder = {
+        addSelect: vi.fn().mockReturnThis(),
+        where: vi.fn().mockReturnThis(),
+        getOne: vi.fn().mockResolvedValue(mockUser),
+      };
+      vi.mocked(mockRepository.createQueryBuilder).mockReturnValue(queryBuilder as any);
+
+      const result = await repository.findByIdWithTotp('user-1');
+
+      expect(result).toEqual(mockUser);
+      expect(queryBuilder.addSelect).toHaveBeenCalledWith('user.totpSecret');
+      expect(queryBuilder.where).toHaveBeenCalledWith('user.id = :id', { id: 'user-1' });
+      expect(queryBuilder.getOne).toHaveBeenCalled();
+    });
+
+    it('should return null when user not found by id with totp', async () => {
+      const queryBuilder = {
+        addSelect: vi.fn().mockReturnThis(),
+        where: vi.fn().mockReturnThis(),
+        getOne: vi.fn().mockResolvedValue(null),
+      };
+      vi.mocked(mockRepository.createQueryBuilder).mockReturnValue(queryBuilder as any);
+
+      const result = await repository.findByIdWithTotp('non-existent');
+
+      expect(result).toBeNull();
     });
   });
 

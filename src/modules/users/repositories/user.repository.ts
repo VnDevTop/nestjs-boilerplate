@@ -38,6 +38,24 @@ export class UserRepository {
   }
 
   /**
+   * Finds a user by ID including the TOTP secret.
+   *
+   * Used for MFA verification flows where the TOTP secret is needed.
+   * The `totpSecret` column has `select: false` by default, so this
+   * method explicitly selects it.
+   *
+   * @param id - User ID.
+   * @returns The matching user with TOTP secret, or null if not found.
+   */
+  async findByIdWithTotp(id: string): Promise<User | null> {
+    return this.repository
+      .createQueryBuilder('user')
+      .addSelect('user.totpSecret')
+      .where('user.id = :id', { id })
+      .getOne();
+  }
+
+  /**
    * Finds a user by email address.
    *
    * @param email - User email address (unique).

@@ -54,6 +54,43 @@ export class User extends BaseEntity {
   passwordHash?: string | null;
 
   /**
+   * Base32-encoded TOTP secret for two-factor authentication (MFA).
+   * Null when TOTP is not enabled for the user.
+   * Never expose or return the secret to clients.
+   */
+  @ApiProperty({
+    type: String,
+    example: 'JBSWY3DPEHPK3PXP',
+    description: 'Base32-encoded TOTP secret for two-factor authentication (MFA). Null when disabled.',
+  })
+  @Column({ type: 'varchar', length: 255, nullable: true, select: false })
+  totpSecret?: string | null;
+
+  /**
+   * Whether two-factor authentication (TOTP) is enabled for the user.
+   * Default: `false`
+   */
+  @ApiProperty({
+    type: Boolean,
+    example: false,
+    description: 'Whether two-factor authentication (TOTP) is enabled.',
+  })
+  @Column({ type: 'boolean', default: false })
+  totpEnabled!: boolean;
+
+  /**
+   * Hashed one-time backup codes for MFA recovery.
+   * Can be null when no backup codes have been issued.
+   */
+  @ApiProperty({
+    type: [String],
+    example: [],
+    description: 'Hashed one-time backup codes for MFA recovery.',
+  })
+  @Column({ type: 'simple-array', nullable: true })
+  backupCodes?: string[] | null;
+
+  /**
    * Whether the email address has been verified.
    * `true` if the user has verified their email address through the
    * identity provider or verification flow.

@@ -2,6 +2,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types.js';
+import { TOTP } from '@otplib/totp';
+import { NodeCryptoPlugin } from '@otplib/plugin-crypto-node';
+import { ScureBase32Plugin } from '@otplib/plugin-base32-scure';
 import { AppModule } from './../src/app.module.js';
 
 describe('AuthController (e2e)', () => {
@@ -160,6 +163,66 @@ describe('AuthController (e2e)', () => {
         .set('Authorization', 'Bearer invalid-token');
 
       expect(res.status).toBe(401);
+    });
+  });
+
+  describe('POST /auth/mfa (e2e - TOTP two-factor flow)', () => {
+    it('should complete totp setup, login mfa challenge and token exchange', async () => {
+      const email = `e2e-totp-${Date.now()}@example.com`;
+
+      const registerRes = await request(app.getHttpServer())
+        .post('/auth/register')
+        .send({ email, password: 'password123', name: 'TOTP User' });
+      expect(registerRes.status).toBe(201);
+      const accessToken = registerRes.body.tokens.accessToken;
+
+      const setupRes = await request(app.getHttpServer())
+        .post('/auth/mfa/setup')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({});
+      expect(setupRes.status).toBe(200);
+      expect(setupRes.body).toHaveProperty('secret');
+      expect(setupRes.body).toHaveProperty('otpauthUrl');
+      expect(setupRes.body).toHaveProperty('qrCode');
+
+      const totp = new TOTP({
+        algorithm: 'sha1',
+        digits: 6,
+        period: 30,
+        crypto: new NodeCryptoPlugin(),
+        base32: new ScureBase32Plugin(),
+      });
+      const code = await totp.generate({
+        secret: setupRes.body.secret,
+        crypto: new NodeCryptoPlugin(),
+        base32: new ScureBase32Plugin(),
+      });
+
+      const verifyRes = await request(app.getHttpServer())
+        .post('/auth/mfa/verify')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ code });
+      expect(verifyRes.status).toBe(200);
+      expect(verifyRes.body.enabled).toBe(true);
+
+      const loginRes = await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ email, password: 'password123' });
+      expect(loginRes.status).toBe(200);
+      expect(loginRes.body.mfaRequired).toBe(true);
+      expect(loginRes.body.mfaToken).toBeDefined();
+
+      const mfaVerifyRes = await request(app.getHttpServer())
+        .post('/auth/mfa/verify-login')
+        .send({ code, mfaToken: loginRes.body.mfaToken });
+      expect(mfaVerifyRes.status).toBe(200);
+      expect(mfaVerifyRes.body.tokens).toHaveProperty('accessToken');
+      expect(mfaVerifyRes.body.tokens).toHaveProperty('refreshToken');
+
+      const meRes = await request(app.getHttpServer())
+        .get('/users/me')
+        .set('Authorization', `Bearer ${mfaVerifyRes.body.tokens.accessToken}`);
+      expect(meRes.status).toBe(200);
     });
   });
 });
