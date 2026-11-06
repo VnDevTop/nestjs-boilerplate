@@ -765,5 +765,16 @@ describe('AuthService', () => {
       expect(result.tokens?.refreshToken).toBe('issued-token');
       expect(jwtService.signAsync).toHaveBeenCalledTimes(2);
     });
+
+    it('should throw UnauthorizedException when the approved device user is not found', async () => {
+      vi.mocked(deviceAuthorizationService.findByDeviceCode).mockResolvedValue({
+        ...mockDevice,
+        status: DeviceAuthorizationStatus.APPROVED,
+        userId: 'unknown-user',
+      });
+      vi.mocked(usersService.findById).mockResolvedValue(null);
+
+      await expect(service.pollDevice('device-code-1')).rejects.toThrow(UnauthorizedException);
+    });
   });
 });
