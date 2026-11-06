@@ -1,9 +1,22 @@
 import { TOTP } from '@otplib/totp';
 import { NodeCryptoPlugin } from '@otplib/plugin-crypto-node';
 import { ScureBase32Plugin } from '@otplib/plugin-base32-scure';
-import { describe, expect, it, beforeEach } from 'vitest';
+import { describe, expect, it, beforeEach, vi } from 'vitest';
 
 import { TotpService } from './totp.service.js';
+
+const { mockedRandomBytes } = vi.hoisted(() => ({
+  mockedRandomBytes: vi.fn((size: number) => Buffer.alloc(size)),
+}));
+
+vi.mock('node:crypto', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:crypto')>();
+  mockedRandomBytes.mockImplementation((size: number) => actual.randomBytes(size));
+  return {
+    ...actual,
+    randomBytes: mockedRandomBytes,
+  };
+});
 
 describe('TotpService', () => {
   let service: TotpService;
@@ -56,6 +69,20 @@ describe('TotpService', () => {
 
   describe('generateBackupCodes', () => {
     it('should generate 10 unique backup codes of length 8', () => {
+      const codes = service.generateBackupCodes();
+
+      expect(codes).toHaveLength(10);
+      expect(new Set(codes).size).toBe(10);
+      codes.forEach((code) => {
+        expect(code).toHaveLength(8);
+      });
+    });
+
+    it('should skip random bytes beyond the unbiased bound during backup code generation', () => {
+      // Force the rejection-sampling branch (byte >= maxUnbiased -> continue)
+      // so the backup code generation loop is fully covered.
+      mockedRandomBytes.mockReturnValueOnce([300] as unknown as Buffer<ArrayBuffer>);
+
       const codes = service.generateBackupCodes();
 
       expect(codes).toHaveLength(10);
