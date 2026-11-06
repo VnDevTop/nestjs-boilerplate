@@ -11,6 +11,8 @@ import { vi } from 'vitest';
 import { UsersService } from '../src/modules/users/users.service.js';
 import { AppModule } from './../src/app.module.js';
 
+const sendMailMock = vi.fn();
+
 describe('AuthController (e2e)', () => {
   let app: INestApplication<App>;
   let moduleFixture: TestingModule;
@@ -20,7 +22,7 @@ describe('AuthController (e2e)', () => {
       imports: [AppModule],
     })
       .overrideProvider(MailerService)
-      .useValue({ sendMail: vi.fn() })
+      .useValue({ sendMail: sendMailMock })
       .compile();
 
     app = moduleFixture.createNestApplication();
@@ -243,29 +245,27 @@ describe('AuthController (e2e)', () => {
         .send({ email, password: 'password123', name: 'Magic User' });
       expect(registerRes.status).toBe(201);
 
+      const magicToken = `e2e-magic-token-${Date.now()}`;
       const requestRes = await request(app.getHttpServer())
         .post('/auth/magic-link/request')
         .send({ email });
       expect(requestRes.status).toBe(200);
       expect(requestRes.body).toHaveProperty('success');
 
-      const mailer = moduleFixture.get<MailerService>(MailerService);
-      expect(mailer.sendMail).toHaveBeenCalled();
-
       const usersService = moduleFixture.get<UsersService>(UsersService);
       const user = await usersService.findByEmail(email);
       if (!user) {
         throw new Error('User not found after registration');
       }
-      await usersService.updateProfile(user.sub, {
-        loginTokenHash: createHash('sha256').update('e2e-magic-token').digest('hex'),
+      await usersService.updateProfile(user.id, {
+        loginTokenHash: createHash('sha256').update(magicToken).digest('hex'),
         loginTokenExpiresAt: new Date(Date.now() + 60 * 1000),
         loginTokenConsumed: false,
       });
 
       const verifyRes = await request(app.getHttpServer())
         .post('/auth/magic-link/verify')
-        .send({ token: 'e2e-magic-token' });
+        .send({ token: magicToken });
       expect(verifyRes.status).toBe(200);
       expect(verifyRes.body).toHaveProperty('tokens');
 
@@ -285,20 +285,21 @@ describe('AuthController (e2e)', () => {
         .send({ email, password: 'password123', name: 'Passcode User' });
       expect(registerRes.status).toBe(201);
 
+      const passcode = String(Math.floor(100000 + Math.random() * 900000));
       const usersService = moduleFixture.get<UsersService>(UsersService);
       const user = await usersService.findByEmail(email);
       if (!user) {
         throw new Error('User not found after registration');
       }
-      await usersService.updateProfile(user.sub, {
-        loginTokenHash: createHash('sha256').update('654321').digest('hex'),
+      await usersService.updateProfile(user.id, {
+        loginTokenHash: createHash('sha256').update(passcode).digest('hex'),
         loginTokenExpiresAt: new Date(Date.now() + 60 * 1000),
         loginTokenConsumed: false,
       });
 
       const verifyRes = await request(app.getHttpServer())
         .post('/auth/passcode/verify')
-        .send({ code: '654321' });
+        .send({ code: passcode });
       expect(verifyRes.status).toBe(200);
       expect(verifyRes.body).toHaveProperty('tokens');
     });

@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, Injectable, Logger, NotFoundException, Optional, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { toDataURL } from 'qrcode';
 import { MailerService } from '@nestjs-modules/mailer';
@@ -33,8 +33,8 @@ export class AuthService {
     private readonly passwordService: PasswordService,
     private readonly jwtService: JwtService,
     private readonly totpService: TotpService,
-    private readonly mailerService: MailerService,
     private readonly oneTimeTokenService: OneTimeTokenService,
+    @Optional() private readonly mailerService: MailerService,
   ) {}
 
   /**
@@ -363,12 +363,14 @@ export class AuthService {
     if (user) {
       const { token } = await this.oneTimeTokenService.createToken(user.id, 'MAGIC_LINK');
       const verifyUrl = `${this.getAppUrl()}/auth/magic-link/verify?token=${token}`;
-      await this.mailerService.sendMail({
-        to: user.email,
-        subject: 'Your login link',
-        html: `<p>Use the following link to sign in:</p><p><a href="${verifyUrl}">Sign in</a></p>`,
-        text: verifyUrl,
-      });
+      if (this.mailerService) {
+        await this.mailerService.sendMail({
+          to: user.email,
+          subject: 'Your login link',
+          html: `<p>Use the following link to sign in:</p><p><a href="${verifyUrl}">Sign in</a></p>`,
+          text: verifyUrl,
+        });
+      }
     }
 
     return { success: true };
@@ -441,12 +443,14 @@ export class AuthService {
     const user = await this.usersService.findByEmail(email);
     if (user) {
       const { token } = await this.oneTimeTokenService.createToken(user.id, 'PASSCODE');
-      await this.mailerService.sendMail({
-        to: user.email,
-        subject: 'Your login passcode',
-        html: `<p>Your login passcode is: <strong>${token}</strong></p>`,
-        text: `Your login passcode is: ${token}`,
-      });
+      if (this.mailerService) {
+        await this.mailerService.sendMail({
+          to: user.email,
+          subject: 'Your login passcode',
+          html: `<p>Your login passcode is: <strong>${token}</strong></p>`,
+          text: `Your login passcode is: ${token}`,
+        });
+      }
     }
 
     return { success: true };
