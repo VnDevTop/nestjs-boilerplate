@@ -1,5 +1,5 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
-import { randomBytes } from 'node:crypto';
+import { randomBytes, randomInt } from 'node:crypto';
 import * as argon2 from 'argon2';
 import { AuthMethod } from '../../common/enums/auth-method.enum.js';
 import { UsersService } from '../users/users.service.js';
@@ -80,8 +80,7 @@ export class OneTimeTokenService {
    * @returns The 6-digit passcode string.
    */
   generatePasscode(): string {
-    const buffer = randomBytes(4);
-    const value = buffer.readUInt32BE(0) % 1_000_000;
+    const value = randomInt(1_000_000);
     return String(value).padStart(6, '0');
   }
 
