@@ -83,6 +83,33 @@ export class AuthController {
   }
 
   /**
+   * Requests an email passcode login code for the given email address.
+   */
+  @Public()
+  @Post('passcode/request')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @ApiOperation({ summary: 'Request email passcode login code' })
+  @ApiResponse({ status: 200, description: 'Passcode sent or silently skipped for unknown email' })
+  async requestPasscode(@Body() body: { email: string }) {
+    return this.authService.requestPasscode(body.email);
+  }
+
+  /**
+   * Verifies an email passcode and completes the login flow.
+   */
+  @Public()
+  @Post('passcode/verify')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @ApiOperation({ summary: 'Verify email passcode and complete login' })
+  @ApiResponse({ status: 200, description: 'Authentication successful' })
+  @ApiResponse({ status: 401, description: 'Invalid or expired passcode' })
+  async verifyPasscode(@Body() body: { code: string }) {
+    return this.authService.verifyPasscode(body.code);
+  }
+
+  /**
    * Starts TOTP two-factor setup for the authenticated user.
    */
   @Post('mfa/setup')

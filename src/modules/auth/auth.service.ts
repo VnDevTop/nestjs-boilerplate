@@ -361,7 +361,7 @@ export class AuthService {
 
     const user = await this.usersService.findByEmail(email);
     if (user) {
-      const { token } = await this.oneTimeTokenService.createToken(user.id, AuthMethod.MAGIC_LINK);
+      const { token } = await this.oneTimeTokenService.createToken(user.id, 'MAGIC_LINK');
       const verifyUrl = `${this.getAppUrl()}/auth/magic-link/verify?token=${token}`;
       await this.mailerService.sendMail({
         to: user.email,
@@ -381,7 +381,7 @@ export class AuthService {
    * @returns Authentication result with tokens, or an MFA challenge.
    */
   async verifyMagicLink(token: string): Promise<AuthResult> {
-    const { userId, authMethod } = await this.oneTimeTokenService.verifyToken(token, AuthMethod.MAGIC_LINK);
+    const { userId, authMethod } = await this.oneTimeTokenService.verifyToken(token);
     const user = await this.usersService.findById(userId);
     if (!user) {
       throw new UnauthorizedException('User not found');
@@ -422,6 +422,50 @@ export class AuthService {
    */
   private getAppUrl(): string {
     return process.env.APP_URL ?? 'http://localhost:3000';
+  }
+
+  /**
+   * Requests an email passcode login code for the given email address.
+   *
+   * Generates a one-time numeric passcode, stores its hash with an expiry and
+   * delivers the code to the user by email. Always responds with a generic
+   * success payload so the endpoint cannot be used to enumerate registered
+   * emails.
+   *
+   * @param email - User email address.
+   * @returns Generic success response.
+   */
+  async requestPasscode(email: string): Promise<{ success: boolean }> {
+    this.logger.log(`Passcode request: ${email}`);
+
+    const user = await this.usersService.findByEmail(email);
+    if (user) {
+      const { token } = await this.oneTimeTokenService.createToken(user.id, 'PASSCODE');
+      await this.mailerService.sendMail({
+        to: user.email,
+        subject: 'Your login passcode',
+        html: `<p>Your login passcode is: <strong>${token}</strong></p>`,
+        text: `Your login passcode is: ${token}`,
+      });
+    }
+
+    return { success: true };
+  }
+
+  /**
+   * Verifies an email passcode and completes the login flow.
+   *
+   * @param code - The one-time passcode submitted by the user.
+   * @returns Authentication result with tokens, or an MFA challenge.
+   */
+  async verifyPasscode(code: string): Promise<AuthResult> {
+    const { userId, authMethod } = await this.oneTimeTokenService.verifyToken(code);
+    const user = await this.usersService.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    return this.completeLogin(user, authMethod);
   }
 
   /**

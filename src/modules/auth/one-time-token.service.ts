@@ -14,6 +14,11 @@ export interface OneTimeTokenPayload {
 }
 
 /**
+ * Supported one-time login token types.
+ */
+export type OneTimeTokenType = 'MAGIC_LINK' | 'PASSCODE';
+
+/**
  * One-time login token service.
  *
  * Implements the Option B storage strategy for magic link / passcode login:
@@ -70,11 +75,11 @@ export class OneTimeTokenService {
    * Persists a newly generated one-time token for a user (hash + expiry).
    *
    * @param userId - User ID the token is issued for.
-   * @param authMethod - Authentication method granted by the token.
+   * @param type - One-time token type (magic link token or passcode).
    * @returns The plain token and its expiry date.
    */
-  async createToken(userId: string, authMethod: AuthMethod): Promise<{ token: string; expiresAt: Date }> {
-    const token = authMethod === AuthMethod.MAGIC_LINK ? this.generateToken() : this.generatePasscode();
+  async createToken(userId: string, type: OneTimeTokenType): Promise<{ token: string; expiresAt: Date }> {
+    const token = type === 'MAGIC_LINK' ? this.generateToken() : this.generatePasscode();
     const tokenHash = this.hashToken(token);
     const expiresAt = new Date(Date.now() + this.tokenTtlMs);
 
@@ -91,11 +96,10 @@ export class OneTimeTokenService {
    * Verifies a one-time login token and consumes it (single-use).
    *
    * @param token - Plain token (magic link token or passcode) submitted by the user.
-   * @param authMethod - Authentication method granted by the token.
    * @returns The user ID and granted auth method on success.
    * @throws UnauthorizedException when the token is unknown, expired or already used.
    */
-  async verifyToken(token: string, authMethod: AuthMethod = AuthMethod.MAGIC_LINK): Promise<OneTimeTokenPayload> {
+  async verifyToken(token: string): Promise<OneTimeTokenPayload> {
     const tokenHash = this.hashToken(token);
     const user = await this.usersService.findByLoginTokenHash(tokenHash);
 
@@ -114,6 +118,6 @@ export class OneTimeTokenService {
 
     await this.usersService.updateProfile(user.id, { loginTokenConsumed: true });
 
-    return { userId: user.id, authMethod };
+    return { userId: user.id, authMethod: AuthMethod.MAGIC_LINK };
   }
 }
