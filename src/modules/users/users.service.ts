@@ -86,6 +86,19 @@ export class UsersService {
   }
 
   /**
+   * Finds a user by their hashed one-time login token.
+   *
+   * Used by the one-time login token verification flows (magic link /
+   * passcode) where the opaque token is resolved through its hash.
+   *
+   * @param loginTokenHash - Hashed one-time login token.
+   * @returns The matching user, or null if no token matches.
+   */
+  async findByLoginTokenHash(loginTokenHash: string): Promise<User | null> {
+    return this.userRepository.findByLoginTokenHash(loginTokenHash);
+  }
+
+  /**
    * Updates a user's profile.
    *
    * @param id - User ID.

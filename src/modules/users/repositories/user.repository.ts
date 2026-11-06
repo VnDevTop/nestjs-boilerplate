@@ -84,6 +84,19 @@ export class UserRepository {
   }
 
   /**
+   * Finds a user by their hashed one-time login token.
+   *
+   * Used by the one-time login token verification flows (magic link /
+   * passcode) where the opaque token is resolved through its Argon2id hash.
+   *
+   * @param loginTokenHash - Hashed one-time login token.
+   * @returns The matching user, or null if no token matches.
+   */
+  async findByLoginTokenHash(loginTokenHash: string): Promise<User | null> {
+    return this.repository.findOne({ where: { loginTokenHash } });
+  }
+
+  /**
    * Creates and persists a new user.
    *
    * @param data - Partial user data to create (typically from registration or OAuth).

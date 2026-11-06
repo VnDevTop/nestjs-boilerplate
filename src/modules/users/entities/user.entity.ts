@@ -91,6 +91,44 @@ export class User extends BaseEntity {
   backupCodes?: string[] | null;
 
   /**
+   * Hashed one-time login token (magic link token or email passcode) used
+   * for passwordless / enhanced login flows. Null when no token is pending.
+   * The plain token is only ever delivered to the user by email; only its
+   * hash is persisted here.
+   */
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    example: 'a1b2c3d4e5f6...',
+    description: 'Hashed one-time login token for magic link or passcode authentication.',
+  })
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  loginTokenHash?: string | null;
+
+  /**
+   * Expiry timestamp for the one-time login token.
+   */
+  @ApiProperty({
+    type: Date,
+    nullable: true,
+    description: 'Expiry timestamp of the one-time login token.',
+  })
+  @Column({ type: 'timestamptz', nullable: true })
+  loginTokenExpiresAt?: Date | null;
+
+  /**
+   * Whether the one-time login token has been consumed (single-use).
+   * Once consumed, the token is invalid even before its expiry.
+   */
+  @ApiProperty({
+    type: Boolean,
+    default: false,
+    description: 'Whether the one-time login token was consumed.',
+  })
+  @Column({ type: 'boolean', default: false })
+  loginTokenConsumed!: boolean;
+
+  /**
    * Whether the email address has been verified.
    * `true` if the user has verified their email address through the
    * identity provider or verification flow.

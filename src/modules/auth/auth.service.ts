@@ -1,7 +1,9 @@
-import { ConflictException, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, Injectable, Logger, NotFoundException, Optional, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { toDataURL } from 'qrcode';
+import { MailerService } from '@nestjs-modules/mailer';
 import { TotpService } from './totp.service.js';
+import { OneTimeTokenService } from './one-time-token.service.js';
 
 import { UsersService } from '../users/users.service.js';
 import { PasswordService } from './password.service.js';
@@ -10,6 +12,7 @@ import { AuthResult } from '../../common/interfaces/auth-result.interface.js';
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface.js';
 import { TokenPair } from '../../common/interfaces/token-pair.interface.js';
 import { RequestUser } from '../../common/interfaces/request-user.interface.js';
+import { AuthMethod } from '../../common/enums/auth-method.enum.js';
 import { Role } from '../../common/enums/role.enum.js';
 import { User } from '../users/entities/user.entity.js';
 
@@ -30,6 +33,8 @@ export class AuthService {
     private readonly passwordService: PasswordService,
     private readonly jwtService: JwtService,
     private readonly totpService: TotpService,
+    private readonly oneTimeTokenService: OneTimeTokenService,
+    @Optional() private readonly mailerService: MailerService,
   ) {}
 
   /**
@@ -62,15 +67,17 @@ export class AuthService {
    * Issues a short-lived MFA challenge token for users with TOTP enabled.
    *
    * @param user - User entity.
+   * @param authMethod - Authentication method that triggered the MFA challenge.
    * @returns Signed MFA challenge token.
    */
-  async issueMfaToken(user: User): Promise<string> {
+  async issueMfaToken(user: User, authMethod: AuthMethod = AuthMethod.PASSWORD): Promise<string> {
     return this.jwtService.signAsync(
       {
         sub: user.id,
         email: user.email,
         roles: user.roles as any,
         type: 'mfa',
+        authMethod,
       },
       { expiresIn: '10m' },
     );
@@ -299,6 +306,7 @@ export class AuthService {
       sub: user.id,
       email: user.email,
       roles: user.roles as any,
+      authMethod: payload.authMethod ?? AuthMethod.PASSWORD,
       mfaVerified: true,
     });
 
@@ -336,6 +344,132 @@ export class AuthService {
     });
 
     return { enabled: true };
+  }
+
+  /**
+   * Requests a magic link login token for the given email address.
+   *
+   * Generates a one-time token, stores its hash with an expiry and delivers
+   * the link to the user by email. Always responds with a generic success
+   * payload so the endpoint cannot be used to enumerate registered emails.
+   *
+   * @param email - User email address.
+   * @returns Generic success response.
+   */
+  async requestMagicLink(email: string): Promise<{ success: boolean }> {
+    this.logger.log(`Magic link request: ${email}`);
+
+    const user = await this.usersService.findByEmail(email);
+    if (user) {
+      const { token } = await this.oneTimeTokenService.createToken(user.id, 'MAGIC_LINK');
+      const verifyUrl = `${this.getAppUrl()}/auth/magic-link/verify?token=${token}`;
+      if (this.mailerService) {
+        await this.mailerService.sendMail({
+          to: user.email,
+          subject: 'Your login link',
+          html: `<p>Use the following link to sign in:</p><p><a href="${verifyUrl}">Sign in</a></p>`,
+          text: verifyUrl,
+        });
+      }
+    }
+
+    return { success: true };
+  }
+
+  /**
+   * Verifies a magic link token and completes the login flow.
+   *
+   * @param token - The magic link token issued by email.
+   * @returns Authentication result with tokens, or an MFA challenge.
+   */
+  async verifyMagicLink(token: string): Promise<AuthResult> {
+    const { userId, authMethod } = await this.oneTimeTokenService.verifyToken(token);
+    const user = await this.usersService.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    return this.completeLogin(user, authMethod);
+  }
+
+  /**
+   * Completes a login for a user authenticated through a passwordless
+   * (magic link / passcode) flow by issuing tokens or an MFA challenge.
+   *
+   * @param user - The user to authenticate.
+   * @param authMethod - Authentication method that granted access.
+   * @returns Authentication result with tokens or MFA challenge.
+   */
+  private async completeLogin(user: User, authMethod: AuthMethod): Promise<AuthResult> {
+    if (user.totpEnabled) {
+      const mfaToken = await this.issueMfaToken(user, authMethod);
+      return { user: this.toRequestUser(user), mfaRequired: true, mfaToken };
+    }
+
+    const tokens = await this.issueTokens({
+      sub: user.id,
+      email: user.email,
+      roles: user.roles as any,
+      authMethod,
+      mfaVerified: true,
+    });
+
+    return { user: this.toRequestUser(user), tokens };
+  }
+
+  /**
+   * Builds the base application URL used for absolute links in emails.
+   *
+   * @returns The application base URL.
+   */
+  private getAppUrl(): string {
+    return process.env.APP_URL ?? 'http://localhost:3000';
+  }
+
+  /**
+   * Requests an email passcode login code for the given email address.
+   *
+   * Generates a one-time numeric passcode, stores its hash with an expiry and
+   * delivers the code to the user by email. Always responds with a generic
+   * success payload so the endpoint cannot be used to enumerate registered
+   * emails.
+   *
+   * @param email - User email address.
+   * @returns Generic success response.
+   */
+  async requestPasscode(email: string): Promise<{ success: boolean }> {
+    this.logger.log(`Passcode request: ${email}`);
+
+    const user = await this.usersService.findByEmail(email);
+    if (user) {
+      const { token } = await this.oneTimeTokenService.createToken(user.id, 'PASSCODE');
+      if (this.mailerService) {
+        await this.mailerService.sendMail({
+          to: user.email,
+          subject: 'Your login passcode',
+          html: `<p>Your login passcode is: <strong>${token}</strong></p>`,
+          text: `Your login passcode is: ${token}`,
+        });
+      }
+    }
+
+    return { success: true };
+  }
+
+  /**
+   * Verifies an email passcode and completes the login flow.
+   *
+   * @param code - The one-time passcode submitted by the user.
+   * @returns Authentication result with tokens, or an MFA challenge.
+   */
+  async verifyPasscode(code: string): Promise<AuthResult> {
+    const { userId, authMethod } = await this.oneTimeTokenService.verifyToken(code);
+    const user = await this.usersService.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    return this.completeLogin(user, authMethod);
   }
 
   /**

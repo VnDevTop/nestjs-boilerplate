@@ -5,15 +5,25 @@ import { App } from 'supertest/types.js';
 import { TOTP } from '@otplib/totp';
 import { NodeCryptoPlugin } from '@otplib/plugin-crypto-node';
 import { ScureBase32Plugin } from '@otplib/plugin-base32-scure';
+import { MailerService } from '@nestjs-modules/mailer';
+import { vi } from 'vitest';
+import { UsersService } from '../src/modules/users/users.service.js';
+import { OneTimeTokenService } from '../src/modules/auth/one-time-token.service.js';
 import { AppModule } from './../src/app.module.js';
+
+const sendMailMock = vi.fn();
 
 describe('AuthController (e2e)', () => {
   let app: INestApplication<App>;
+  let moduleFixture: TestingModule;
 
   beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
+    moduleFixture = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(MailerService)
+      .useValue({ sendMail: sendMailMock })
+      .compile();
 
     app = moduleFixture.createNestApplication();
     await app.init();
@@ -223,6 +233,77 @@ describe('AuthController (e2e)', () => {
         .get('/users/me')
         .set('Authorization', `Bearer ${mfaVerifyRes.body.tokens.accessToken}`);
       expect(meRes.status).toBe(200);
+    });
+  });
+
+  describe('POST /auth/magic-link (e2e - magic link flow)', () => {
+    it('should request magic link, verify token and complete login', async () => {
+      const email = `e2e-magic-${Date.now()}@example.com`;
+
+      const registerRes = await request(app.getHttpServer())
+        .post('/auth/register')
+        .send({ email, password: 'password123', name: 'Magic User' });
+      expect(registerRes.status).toBe(201);
+
+      const magicToken = `e2e-magic-token-${Date.now()}`;
+      const requestRes = await request(app.getHttpServer())
+        .post('/auth/magic-link/request')
+        .send({ email });
+      expect(requestRes.status).toBe(200);
+      expect(requestRes.body).toHaveProperty('success');
+
+      const usersService = moduleFixture.get<UsersService>(UsersService);
+      const oneTimeTokenService = moduleFixture.get<OneTimeTokenService>(OneTimeTokenService);
+      const user = await usersService.findByEmail(email);
+      if (!user) {
+        throw new Error('User not found after registration');
+      }
+      await usersService.updateProfile(user.id, {
+        loginTokenHash: await oneTimeTokenService.hashToken(magicToken),
+        loginTokenExpiresAt: new Date(Date.now() + 60 * 1000),
+        loginTokenConsumed: false,
+      });
+
+      const verifyRes = await request(app.getHttpServer())
+        .post('/auth/magic-link/verify')
+        .send({ token: magicToken });
+      expect(verifyRes.status).toBe(200);
+      expect(verifyRes.body).toHaveProperty('tokens');
+
+      const meRes = await request(app.getHttpServer())
+        .get('/users/me')
+        .set('Authorization', `Bearer ${verifyRes.body.tokens.accessToken}`);
+      expect(meRes.status).toBe(200);
+    });
+  });
+
+  describe('POST /auth/passcode (e2e - passcode flow)', () => {
+    it('should verify passcode and complete login', async () => {
+      const email = `e2e-passcode-${Date.now()}@example.com`;
+
+      const registerRes = await request(app.getHttpServer())
+        .post('/auth/register')
+        .send({ email, password: 'password123', name: 'Passcode User' });
+      expect(registerRes.status).toBe(201);
+
+      const passcode = String(Math.floor(100000 + Math.random() * 900000));
+      const usersService = moduleFixture.get<UsersService>(UsersService);
+      const oneTimeTokenService = moduleFixture.get<OneTimeTokenService>(OneTimeTokenService);
+      const user = await usersService.findByEmail(email);
+      if (!user) {
+        throw new Error('User not found after registration');
+      }
+      await usersService.updateProfile(user.id, {
+        loginTokenHash: await oneTimeTokenService.hashToken(passcode),
+        loginTokenExpiresAt: new Date(Date.now() + 60 * 1000),
+        loginTokenConsumed: false,
+      });
+
+      const verifyRes = await request(app.getHttpServer())
+        .post('/auth/passcode/verify')
+        .send({ code: passcode });
+      expect(verifyRes.status).toBe(200);
+      expect(verifyRes.body).toHaveProperty('tokens');
     });
   });
 });
