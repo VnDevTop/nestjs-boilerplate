@@ -154,4 +154,44 @@ export class AuthController {
   async disableMfa(@Body() body: { code: string }, @CurrentUser() user: RequestUser) {
     return this.authService.disableMfa(user.sub, user.email ?? user.sub, body.code);
   }
+
+  /**
+   * Requests a device authorization for the given OAuth2 client.
+   */
+  @Public()
+  @Post('device/code')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @ApiOperation({ summary: 'Request a device authorization code' })
+  @ApiResponse({ status: 200, description: 'Device authorization issued' })
+  async requestDeviceCode(@Body() body: { clientId: string; scopes?: string[] }) {
+    return this.authService.requestDeviceCode(body.clientId, body.scopes);
+  }
+
+  /**
+   * Approves a pending device authorization on behalf of the authenticated user.
+   */
+  @Post('device/approve')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @ApiOperation({ summary: 'Approve a pending device authorization' })
+  @ApiResponse({ status: 200, description: 'Device authorization approved' })
+  @ApiResponse({ status: 401, description: 'MFA is required or device code is invalid' })
+  async approveDevice(@Body() body: { userCode: string }, @CurrentUser() user: RequestUser) {
+    return this.authService.approveDevice(body.userCode, user);
+  }
+
+  /**
+   * Polls the device authorization and returns tokens once approved.
+   */
+  @Public()
+  @Post('device/poll')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
+  @ApiOperation({ summary: 'Poll the device authorization for tokens' })
+  @ApiResponse({ status: 200, description: 'Device authorization status or token pair' })
+  @ApiResponse({ status: 401, description: 'Invalid device code' })
+  async pollDevice(@Body() body: { deviceCode: string }) {
+    return this.authService.pollDevice(body.deviceCode);
+  }
 }

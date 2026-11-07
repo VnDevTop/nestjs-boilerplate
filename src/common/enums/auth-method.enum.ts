@@ -12,6 +12,8 @@ export enum AuthMethod {
   MFA = 'MFA',
   /** Magic link / email passcode authentication. */
   MAGIC_LINK = 'MAGIC_LINK',
+  /** Device authorization grant authentication (OAuth2 device flow). */
+  DEVICE = 'DEVICE',
   /** API key authentication. */
   API_KEY = 'API_KEY',
 }

@@ -13,6 +13,9 @@ import { JwtPayload } from '../../common/interfaces/jwt-payload.interface.js';
 import { TokenPair } from '../../common/interfaces/token-pair.interface.js';
 import { RequestUser } from '../../common/interfaces/request-user.interface.js';
 import { AuthMethod } from '../../common/enums/auth-method.enum.js';
+import { DeviceAuthorizationStatus } from './entities/device-authorization.entity.js';
+import { DeviceAuthorizationService } from './device-authorization.service.js';
+import { DeviceAuthorizationResponse, DevicePollResponse } from './device-authorization.service.js';
 import { Role } from '../../common/enums/role.enum.js';
 import { User } from '../users/entities/user.entity.js';
 
@@ -34,6 +37,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly totpService: TotpService,
     private readonly oneTimeTokenService: OneTimeTokenService,
+    private readonly deviceAuthorizationService: DeviceAuthorizationService,
     @Optional() private readonly mailerService: MailerService,
   ) {}
 
@@ -344,6 +348,98 @@ export class AuthService {
     });
 
     return { enabled: true };
+  }
+
+  /**
+   * Requests a device authorization for the given OAuth2 client.
+   *
+   * Creates a pending device authorization (device code + user code) with a
+   * TTL and returns the RFC 8628 style response contract for the device.
+   *
+   * @param clientId - OAuth2 client identifier.
+   * @param scopes - Optional requested scopes.
+   * @returns Device authorization response with device/user codes and URIs.
+   */
+  async requestDeviceCode(clientId: string, scopes?: string[]): Promise<DeviceAuthorizationResponse> {
+    const deviceAuthorization = await this.deviceAuthorizationService.createAuthorization(clientId, scopes);
+
+    const verificationUri = `${this.getAppUrl()}/auth/device/verify?user_code=${deviceAuthorization.userCode}`;
+    const verificationUriComplete = `${this.getAppUrl()}/auth/device/verify?user_code=${deviceAuthorization.userCode}&client_id=${encodeURIComponent(clientId)}`;
+
+    return {
+      deviceCode: deviceAuthorization.deviceCode,
+      userCode: deviceAuthorization.userCode,
+      verificationUri,
+      verificationUriComplete,
+      expiresIn: Math.max(0, Math.floor((deviceAuthorization.expiresAt.getTime() - Date.now()) / 1000)),
+      interval: 5,
+    };
+  }
+
+  /**
+   * Approves a pending device authorization on behalf of an authenticated user.
+   *
+   * Multi-factor authentication is enforced: only users with an MFA-verified
+   * JWT may approve a device (Telegram-like security posture).
+   *
+   * @param userCode - User-facing device code.
+   * @param user - Authenticated user approving the device.
+   * @returns The approved device authorization status.
+   * @throws UnauthorizedException when MFA is not verified or the device is not pending.
+   */
+  async approveDevice(userCode: string, user: RequestUser): Promise<{ status: DeviceAuthorizationStatus }> {
+    if (!user.mfaVerified) {
+      throw new UnauthorizedException('Multi-factor authentication is required to approve a device');
+    }
+
+    const deviceAuthorization = await this.deviceAuthorizationService.findByUserCode(userCode);
+    if (!deviceAuthorization || deviceAuthorization.status !== DeviceAuthorizationStatus.PENDING) {
+      throw new UnauthorizedException('Invalid device code');
+    }
+
+    const approved = await this.deviceAuthorizationService.approveByUserCode(userCode, user.sub);
+    return { status: approved.status };
+  }
+
+  /**
+   * Polls the device authorization and issues tokens once approved.
+   *
+   * @param deviceCode - Opaque device code.
+   * @returns The device poll response with token pair when approved.
+   * @throws UnauthorizedException when the device code is unknown.
+   */
+  async pollDevice(deviceCode: string): Promise<DevicePollResponse> {
+    const deviceAuthorization = await this.deviceAuthorizationService.findByDeviceCode(deviceCode);
+    if (!deviceAuthorization) {
+      throw new UnauthorizedException('Invalid device code');
+    }
+
+    if (deviceAuthorization.status === DeviceAuthorizationStatus.APPROVED) {
+      const user = await this.usersService.findById(deviceAuthorization.userId ?? '');
+      if (!user) {
+        throw new UnauthorizedException('User not found');
+      }
+
+      const tokens = await this.issueTokens({
+        sub: user.id,
+        email: user.email,
+        roles: user.roles as any,
+        authMethod: AuthMethod.DEVICE,
+        mfaVerified: true,
+      });
+
+      return { status: DeviceAuthorizationStatus.APPROVED, tokens };
+    }
+
+    if (deviceAuthorization.status === DeviceAuthorizationStatus.DENIED) {
+      return { status: DeviceAuthorizationStatus.DENIED };
+    }
+
+    if (deviceAuthorization.status === DeviceAuthorizationStatus.EXPIRED) {
+      return { status: DeviceAuthorizationStatus.EXPIRED };
+    }
+
+    return { status: DeviceAuthorizationStatus.PENDING };
   }
 
   /**

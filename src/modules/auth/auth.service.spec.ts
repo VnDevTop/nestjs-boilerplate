@@ -9,9 +9,12 @@ import { UsersService } from '../users/users.service.js';
 import { PasswordService } from './password.service.js';
 import { TotpService } from './totp.service.js';
 import { OneTimeTokenService } from './one-time-token.service.js';
+import { DeviceAuthorizationService } from './device-authorization.service.js';
 import { AuthMethod } from '../../common/enums/auth-method.enum.js';
+import { DeviceAuthorizationStatus, DeviceAuthorization } from './entities/device-authorization.entity.js';
 import { Role } from '../../common/enums/role.enum.js';
 import { User } from '../users/entities/user.entity.js';
+import type { RequestUser } from '../../common/interfaces/request-user.interface.js';
 
 const { toDataURLMock } = vi.hoisted(() => ({
   toDataURLMock: vi.fn(async () => 'data:image/png;base64,abc'),
@@ -29,7 +32,22 @@ describe('AuthService', () => {
   let totpService: TotpService;
   let mailerService: MailerService;
   let oneTimeTokenService: OneTimeTokenService;
-  
+  let deviceAuthorizationService: DeviceAuthorizationService;
+
+  const mockDevice: DeviceAuthorization = {
+    id: 'device-auth-1',
+    deviceCode: 'device-code-1',
+    userCode: 'ABCD-EFGH',
+    clientId: 'nestjs-device-client',
+    userId: null,
+    status: DeviceAuthorizationStatus.PENDING,
+    scopes: null,
+    expiresAt: new Date(Date.now() + 60 * 1000),
+    createdAt: new Date('2024-01-01'),
+    updatedAt: new Date('2024-01-01'),
+    deletedAt: null,
+  } as DeviceAuthorization;
+
   const mockUser: User = {
     id: 'user-1',
     sub: 'sub-123',
@@ -102,6 +120,19 @@ describe('AuthService', () => {
             verifyToken: vi.fn(),
           },
         },
+        {
+          provide: DeviceAuthorizationService,
+          useValue: {
+            createAuthorization: vi.fn(),
+            findByDeviceCode: vi.fn(),
+            findByUserCode: vi.fn(),
+            approve: vi.fn(),
+            approveByUserCode: vi.fn(),
+            deny: vi.fn(),
+            isExpired: vi.fn(),
+            cleanupExpired: vi.fn(),
+          },
+        },
       ],
     }).compile();
     
@@ -112,6 +143,7 @@ describe('AuthService', () => {
     totpService = module.get<TotpService>(TotpService);
     mailerService = module.get<MailerService>(MailerService);
     oneTimeTokenService = module.get<OneTimeTokenService>(OneTimeTokenService);
+    deviceAuthorizationService = module.get<DeviceAuthorizationService>(DeviceAuthorizationService);
   });
   
   describe('register', () => {
@@ -623,6 +655,126 @@ describe('AuthService', () => {
       vi.mocked(usersService.findById).mockResolvedValue(null);
 
       await expect(service.verifyPasscode('123456')).rejects.toThrow(UnauthorizedException);
+    });
+  });
+
+  describe('requestDeviceCode', () => {
+    it('should create a device authorization and return the response', async () => {
+      vi.mocked(deviceAuthorizationService.createAuthorization).mockResolvedValue(mockDevice);
+
+      const result = await service.requestDeviceCode('nestjs-device-client', ['openid']);
+
+      expect(deviceAuthorizationService.createAuthorization).toHaveBeenCalledWith('nestjs-device-client', [
+        'openid',
+      ]);
+      expect(result.deviceCode).toBe('device-code-1');
+      expect(result.userCode).toBe('ABCD-EFGH');
+      expect(result.verificationUri).toBe('http://localhost:3000/auth/device/verify?user_code=ABCD-EFGH');
+      expect(result.verificationUriComplete).toBe(
+        'http://localhost:3000/auth/device/verify?user_code=ABCD-EFGH&client_id=nestjs-device-client',
+      );
+      expect(result.expiresIn).toBeGreaterThan(0);
+      expect(result.interval).toBe(5);
+    });
+  });
+
+  describe('approveDevice', () => {
+    it('should throw UnauthorizedException when mfa is not verified', async () => {
+      const user = { sub: 'user-1' } as RequestUser;
+
+      await expect(service.approveDevice('ABCD-EFGH', user)).rejects.toThrow(UnauthorizedException);
+      expect(deviceAuthorizationService.findByUserCode).not.toHaveBeenCalled();
+    });
+
+    it('should approve a pending device when mfa is verified', async () => {
+      vi.mocked(deviceAuthorizationService.findByUserCode).mockResolvedValue(mockDevice);
+      vi.mocked(deviceAuthorizationService.approveByUserCode).mockResolvedValue({
+        ...mockDevice,
+        status: DeviceAuthorizationStatus.APPROVED,
+        userId: 'user-1',
+      });
+
+      const result = await service.approveDevice('ABCD-EFGH', { sub: 'user-1', mfaVerified: true } as RequestUser);
+
+      expect(deviceAuthorizationService.approveByUserCode).toHaveBeenCalledWith('ABCD-EFGH', 'user-1');
+      expect(result.status).toBe(DeviceAuthorizationStatus.APPROVED);
+    });
+
+    it('should throw UnauthorizedException when the device is not pending', async () => {
+      vi.mocked(deviceAuthorizationService.findByUserCode).mockResolvedValue({
+        ...mockDevice,
+        status: DeviceAuthorizationStatus.APPROVED,
+      });
+
+      await expect(
+        service.approveDevice('ABCD-EFGH', { sub: 'user-1', mfaVerified: true } as RequestUser),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+  });
+
+  describe('pollDevice', () => {
+    it('should throw UnauthorizedException when the device code is unknown', async () => {
+      vi.mocked(deviceAuthorizationService.findByDeviceCode).mockResolvedValue(null);
+
+      await expect(service.pollDevice('unknown-code')).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should return pending status when the device is pending', async () => {
+      vi.mocked(deviceAuthorizationService.findByDeviceCode).mockResolvedValue(mockDevice);
+
+      const result = await service.pollDevice('device-code-1');
+
+      expect(result.status).toBe(DeviceAuthorizationStatus.PENDING);
+    });
+
+    it('should return denied status when the device is denied', async () => {
+      vi.mocked(deviceAuthorizationService.findByDeviceCode).mockResolvedValue({
+        ...mockDevice,
+        status: DeviceAuthorizationStatus.DENIED,
+      });
+
+      const result = await service.pollDevice('device-code-1');
+
+      expect(result.status).toBe(DeviceAuthorizationStatus.DENIED);
+    });
+
+    it('should return expired status when the device is expired', async () => {
+      vi.mocked(deviceAuthorizationService.findByDeviceCode).mockResolvedValue({
+        ...mockDevice,
+        status: DeviceAuthorizationStatus.EXPIRED,
+      });
+
+      const result = await service.pollDevice('device-code-1');
+
+      expect(result.status).toBe(DeviceAuthorizationStatus.EXPIRED);
+    });
+
+    it('should issue tokens when the device is approved', async () => {
+      vi.mocked(deviceAuthorizationService.findByDeviceCode).mockResolvedValue({
+        ...mockDevice,
+        status: DeviceAuthorizationStatus.APPROVED,
+        userId: 'user-1',
+      });
+      vi.mocked(usersService.findById).mockResolvedValue(mockUser);
+      vi.mocked(jwtService.signAsync).mockResolvedValue('issued-token');
+
+      const result = await service.pollDevice('device-code-1');
+
+      expect(result.status).toBe(DeviceAuthorizationStatus.APPROVED);
+      expect(result.tokens?.accessToken).toBe('issued-token');
+      expect(result.tokens?.refreshToken).toBe('issued-token');
+      expect(jwtService.signAsync).toHaveBeenCalledTimes(2);
+    });
+
+    it('should throw UnauthorizedException when the approved device user is not found', async () => {
+      vi.mocked(deviceAuthorizationService.findByDeviceCode).mockResolvedValue({
+        ...mockDevice,
+        status: DeviceAuthorizationStatus.APPROVED,
+        userId: 'unknown-user',
+      });
+      vi.mocked(usersService.findById).mockResolvedValue(null);
+
+      await expect(service.pollDevice('device-code-1')).rejects.toThrow(UnauthorizedException);
     });
   });
 });

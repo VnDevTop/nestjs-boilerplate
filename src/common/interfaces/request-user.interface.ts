@@ -14,6 +14,8 @@ export interface RequestUser {
   roles?: Role[] | string[];
   /** Whether the email has been verified. */
   emailVerified?: boolean;
+  /** Whether the user completed multi-factor authentication (MFA). */
+  mfaVerified?: boolean;
   /** Display name. */
   name?: string;
 }

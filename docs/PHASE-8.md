@@ -142,6 +142,22 @@ abstraction layer, registry for multi-provider support, and setup documentation.
    - Added `POST /auth/passcode/request` and `POST /auth/passcode/verify` (public, throttled).
    - Passcode is delivered by email and verified as a single-use hashed token.
 
+#### Task 3 — `feat(auth): add device code flow`
+
+1. `feat(auth): add device authorization storage`
+   - Added `DeviceAuthorization` entity (`device_authorizations` table) with `deviceCode`, `userCode`, `clientId`, `userId`, `status`, `scopes`, `expiresAt` plus TypeORM migration `1791379200000-add-device-authorizations.ts`.
+
+2. `feat(auth): add device code service`
+   - Added `DeviceAuthorizationService` (pattern: `OneTimeTokenService`) managing the device authorization lifecycle (create / find by device code or user code / approve / deny / expire / cleanup).
+
+3. `feat(auth): add device code login flow`
+   - Added `POST /auth/device/code` (public, throttled) returning the RFC 8628 style response contract (`device_code`, `user_code`, `verification_uri`, `verification_uri_complete`, `expires_in`, `interval`).
+   - Added `POST /auth/device/approve` (authenticated, throttled) enforcing MFA-verified users (`mfaVerified`) before approving a pending device.
+   - Added `POST /auth/device/poll` (public, throttled) returning `pending` / `approved` / `denied` / `expired`; on approval it issues a JWT pair with `authMethod: AuthMethod.DEVICE` and `mfaVerified: true`.
+
+4. `test(auth): add device code flow tests`
+   - Added unit tests for the device authorization service, the device endpoints and the device flow service branches.
+
 #### Validation
 
 ```bash

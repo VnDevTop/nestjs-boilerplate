@@ -1,14 +1,17 @@
 import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { APP_GUARD } from '@nestjs/core';
 
 import { UsersModule } from '../users/users.module.js';
+import { DeviceAuthorization } from './entities/device-authorization.entity.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
 import { OneTimeTokenService } from './one-time-token.service.js';
+import { DeviceAuthorizationService } from './device-authorization.service.js';
 import { PasswordService } from './password.service.js';
 import { TotpService } from './totp.service.js';
 import { JwtStrategy } from './strategies/jwt.strategy.js';
@@ -31,6 +34,7 @@ import { jwtConfig } from '../../config/jwt.config.js';
 @Module({
   imports: [
     UsersModule,
+    TypeOrmModule.forFeature([DeviceAuthorization]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync(jwtConfig.asProvider()),
   ],
@@ -40,6 +44,7 @@ import { jwtConfig } from '../../config/jwt.config.js';
     PasswordService,
     TotpService,
     OneTimeTokenService,
+    DeviceAuthorizationService,
     JwtStrategy,
     JwtAuthGuard,
     AuthGuard,
