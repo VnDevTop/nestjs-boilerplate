@@ -11,6 +11,7 @@ import { TotpService } from './totp.service.js';
 import { OneTimeTokenService } from './one-time-token.service.js';
 import { DeviceAuthorizationService } from './device-authorization.service.js';
 import { AuthMethod } from '../../common/enums/auth-method.enum.js';
+import { jwtConfig } from '../../config/jwt.config.js';
 import { DeviceAuthorizationStatus, DeviceAuthorization } from './entities/device-authorization.entity.js';
 import { Role } from '../../common/enums/role.enum.js';
 import { User } from '../users/entities/user.entity.js';
@@ -526,6 +527,14 @@ describe('AuthService', () => {
   });
   
   describe('verifyMfaWithToken', () => {
+    it('should throw UnauthorizedException when the mfa token is invalid', async () => {
+      vi.mocked(jwtService.verifyAsync).mockRejectedValue(new Error('jwt malformed'));
+      vi.mocked(usersService.findByIdWithTotp).mockResolvedValue({ ...mockUser, totpSecret: 'JBSWY3DPEHPK3PXP' });
+
+      await expect(service.verifyMfaWithToken('mfa-token', '123456')).rejects.toThrow(UnauthorizedException);
+      expect(jwtService.verifyAsync).toHaveBeenCalledWith('mfa-token', { secret: jwtConfig().secret });
+    });
+
     it('should return tokens when mfa token and valid code verify', async () => {
       vi.mocked(jwtService.verifyAsync).mockResolvedValue({ sub: 'user-1', type: 'mfa' });
       vi.mocked(usersService.findByIdWithTotp).mockResolvedValue({ ...mockUser, totpSecret: 'JBSWY3DPEHPK3PXP' });
@@ -539,6 +548,7 @@ describe('AuthService', () => {
       expect(result.enabled).toBe(true);
       expect(result.tokens?.accessToken).toBe('access-token');
       expect(result.tokens?.refreshToken).toBe('refresh-token');
+      expect(jwtService.signAsync).toHaveBeenNthCalledWith(1, expect.objectContaining({ authMethod: AuthMethod.PASSWORD, mfaVerified: true }), expect.anything());
     });
     
     it('should throw NotFoundException when user not found', async () => {
@@ -628,7 +638,7 @@ describe('AuthService', () => {
   
   describe('verifyPasscode', () => {
     it('should issue tokens when passcode is valid and user has no totp', async () => {
-      vi.mocked(oneTimeTokenService.verifyToken).mockResolvedValue({ userId: 'user-1', authMethod: AuthMethod.MAGIC_LINK });
+      vi.mocked(oneTimeTokenService.verifyToken).mockResolvedValue({ userId: 'user-1', authMethod: AuthMethod.PASSCODE });
       vi.mocked(usersService.findById).mockResolvedValue(mockUser);
       vi.mocked(jwtService.signAsync).mockResolvedValueOnce('access-token').mockResolvedValueOnce('refresh-token');
       
@@ -637,10 +647,11 @@ describe('AuthService', () => {
       expect(result.tokens?.accessToken).toBe('access-token');
       expect(result.tokens?.refreshToken).toBe('refresh-token');
       expect(oneTimeTokenService.verifyToken).toHaveBeenCalledWith('123456');
+      expect(jwtService.signAsync).toHaveBeenNthCalledWith(1, expect.objectContaining({ authMethod: AuthMethod.PASSCODE, mfaVerified: true }), expect.anything());
     });
     
     it('should return mfaRequired and mfaToken when user has totp enabled', async () => {
-      vi.mocked(oneTimeTokenService.verifyToken).mockResolvedValue({ userId: 'user-1', authMethod: AuthMethod.MAGIC_LINK });
+      vi.mocked(oneTimeTokenService.verifyToken).mockResolvedValue({ userId: 'user-1', authMethod: AuthMethod.PASSCODE });
       vi.mocked(usersService.findById).mockResolvedValue({ ...mockUser, totpEnabled: true });
       vi.mocked(jwtService.signAsync).mockResolvedValue('mfa-token');
 
