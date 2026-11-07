@@ -145,6 +145,10 @@ export class OneTimeTokenService {
 
     await this.usersService.updateProfile(user.id, { loginTokenConsumed: true });
 
-    return { userId: user.id, authMethod: AuthMethod.MAGIC_LINK };
+    // Numeric passcodes (email) are issued as 6-digit codes, while magic
+    // link tokens are opaque base64url strings. Resolve the auth method from
+    // the token shape so the completed login reflects how the user signed in.
+    const authMethod = /^\d{6}$/.test(token) ? AuthMethod.PASSCODE : AuthMethod.MAGIC_LINK;
+    return { userId: user.id, authMethod };
   }
 }
