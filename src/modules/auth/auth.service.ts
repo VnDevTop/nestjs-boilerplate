@@ -286,7 +286,11 @@ export class AuthService {
    * @returns MFA status and, when verified, the issued token pair.
    */
   async verifyMfaWithToken(mfaToken: string, code: string): Promise<{ enabled: boolean; tokens?: TokenPair }> {
-    const payload = await this.jwtService.verifyAsync(mfaToken, { secret: jwtConfig().secret });
+    const payload = await this.jwtService
+      .verifyAsync(mfaToken, { secret: jwtConfig().secret })
+      .catch(() => {
+        throw new UnauthorizedException('Invalid MFA token');
+      });
     if (payload.type !== 'mfa') {
       throw new UnauthorizedException('Invalid MFA token');
     }
