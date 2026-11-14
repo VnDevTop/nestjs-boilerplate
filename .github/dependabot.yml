@@ -1,0 +1,7 @@
+version: 2
+updates:
+  # Keep npm dependencies on the latest stable releases daily.
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'daily'
